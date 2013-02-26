@@ -31,7 +31,7 @@ git init<br />
 git add .<br />
 git commit -m "Fixed #3: should be 项目, not 项."  <br />
 git remote add origin git@github.com:COPU/openunion.git<br />
-git push -f origin master<br />
+git push -u origin master<br />
 
 第三：（从本地将文件放往github）<br />
 cd **<br />
