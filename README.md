@@ -1,4 +1,4 @@
-OpenUnion导航社区平台
+<b>OpenUnion导航社区平台</b>
 
 github使用指南
 =========
