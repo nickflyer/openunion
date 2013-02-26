@@ -1,0 +1,289 @@
+<?php
+// $Id$
+/**
+* @file
+* Module for dynamic display of pithy philosophy quotes.
+*/
+/**
+* Implementation of hook_help()
+*/
+function custom_filter_help($path, $arg){
+    if ($path == 'admin/help#custom_filter') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+
+/**
+* Implementation of hook_block().
+*/
+function custom_filter_block($op = 'list', $delta = 0, $edit = array()){
+   switch ($op) {
+	case 'list':
+	   $blocks[0]['info'] = t('Custom Filter');
+	   return $blocks;
+	case 'view':
+	$items = _custom_filter_get();
+	//echo print_r($items);
+	if(!empty($items)){
+	    $content = theme('custom_filter',$items);
+	    $blocks['subject'] = t('Custom Filter');
+	    $blocks['content'] = $content;
+	    return $blocks;
+	}
+	else{
+           $blocks['subject'] = t('Custom Filter');
+           $blocks['content'] = t('No content');
+           return $blocks;
+	}
+   }
+}
+
+/**
+* Callback to handle requests for philquotes content.
+* @return
+* JSON data.
+*/
+function custom_filter_item() {
+   //_POST
+   $item = _custom_filter_post();
+   drupal_json($item); 
+}
+
+function _custom_filter_post() {
+    $item_id = $_POST['type_id'];
+    $location_id = $_POST['location_id'];
+    if( $item_id =="all" ) $item_id = 0 ;
+    if( $location_id == "all" ) $location_id = 0 ;
+  //  $mm =count($post_item);
+    $sql = "SELECT * FROM {content_type_group}";
+    $res = db_query($sql);//搜索数据库，drupal真给力啊！都不用写初始条件了
+    $condition_type = array();
+    $i = 0 ;
+    while($row = db_fetch_object($res)){
+        $condition_type[$i] = $row->field_group_type_value;
+        $i++;
+    }//将提取出的值赋值给数组
+    $condition_result = array_values(array_unique($condition_type));
+    if($item_id){
+	$item_id = $item_id - 1;
+	$Id_item  = $condition_result[$item_id] ;
+    }
+    else{
+	$Id_item = 'all';
+    }
+    if( $Id_item == "all"){
+	 $sql = "SELECT nid FROM {node}  ORDER BY `node`.`nid` DESC limit 0,20";
+         $res = db_query($sql);
+	 $items = array();
+	 $i = 0 ;
+	 while($row = db_fetch_object($res)){
+ 	        $nodeID[$i] = $row->nid;
+        	$i++;
+        }
+    }
+    else{
+	$sql = "SELECT nid FROM {content_type_group} ".
+            "WHERE field_group_type_value = '$Id_item' ORDER BY `content_type_group`.`nid` DESC limit 0,20";
+	$i = 0 ;
+	$res = db_query($sql);
+ 	while($row = db_fetch_object($res)){
+		$nodeID[$i] = $row->nid;
+		$i++;
+	} 
+	$k = $i;
+	for($j = 0 ; $j < $k ; $j++ ){
+		$sql = "SELECT nid FROM  `og_ancestry`  ".
+             		"WHERE group_nid = ".$nodeID[$j]." ORDER BY `og_ancestry`.`nid` DESC LIMIT 0,20";
+		$res = db_query($sql);
+	 	while($row = db_fetch_object($res)){
+			$nodeID[$i] = $row->nid;
+			$i++;
+		} 
+	}
+    }
+/*搜索地址*/
+    /*地点选择*/
+    $sql = "SELECT  `field_location_value`  FROM {`content_type_event`}";
+    $res = db_query($sql);
+    $condition_location = array();
+    $i = 0 ;
+    while($row = db_fetch_object($res)){
+	if($row->field_location_value){    
+	    $condition_location[$i] = $row->field_location_value;
+	    $i++;
+	}
+    }
+    $sql = "SELECT  `field_place_value`  FROM {`content_type_group`}";
+    $res = db_query($sql);
+    while($row = db_fetch_object($res)){
+	if($row->field_place_value){    
+	    $condition_location[$i] = $row->field_place_value;
+	    $i++;
+	}
+    }
+    $location_result = array_values(array_unique($condition_location));
+    if($location_id){
+	$location_id = $location_id - 1;
+	$Location_item  = $location_result[$location_id] ;
+    }
+    else{
+	$Location_item = 0;
+    } 
+
+    if($Location_item){
+	$sql = "SELECT  `nid`  FROM {`content_type_event`}  WHERE `field_location_value` LIKE '$Location_item'  LIMIT 0 , 20";
+	$res = db_query($sql);
+ 	while($row = db_fetch_object($res)){
+		$Location_nodeID[$i] = $row->nid;
+		$i++;
+	} 
+	$sql = "SELECT  `nid`  FROM {`content_type_group`}  WHERE `field_place_value` LIKE '$Location_item'  LIMIT 0 , 20";
+	$res = db_query($sql);
+ 	while($row = db_fetch_object($res)){
+		$Location_nodeID[$i] = $row->nid;
+		$i++;
+	} 
+	$nodeID = array_values(array_intersect($Location_nodeID,$nodeID));
+    }
+/*地址END*/
+	$result_num = count($nodeID);
+	$items = array();
+	for( $j = 0 ; $j <$result_num ; $j++  ){
+        	$item_tmp = node_load($nodeID[$j]);
+        	$items['nid'][$j] = $item_tmp->nid;
+		$items['type'][$j] = $item_tmp->type;
+       		$items['title'][$j] =$item_tmp->title;
+       		$items['url'][$j] = url("node/".$items['nid'][$j], array('absolute' => TRUE));	   
+		if($j >15)
+		break;  
+	}
+	$items['num'] = $j;
+
+    //$result = "<div class='type-title'><a class='author-title' href='".$items['url'][0]."'</a>".$items['title'][0]+"</div>";
+    return drupal_json($items);
+}
+
+/**
+* Implementaiton of hook_menu()
+*/
+function custom_filter_menu() {
+    $items['filter.json'] = array(
+	'title' => 'Filter AJAX Gateway',
+	'page callback' => '_custom_filter_post',
+	'access arguments' => array('access content'),
+	'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function _custom_filter_get(){
+    $sql = "SELECT nid FROM `node` ORDER BY `node`.`nid` DESC  LIMIT 0 , 10 ";
+    $res = db_query($sql);
+    $items = array();
+    $i = 0 ;
+    while($row = db_fetch_object($res)){
+        $node_id = $row->nid;
+	$item_tmp = node_load($node_id);
+	//echo print_r($item_tmp);
+	$items['nid'][$i] = $item_tmp->nid;
+	$items['type'][$i] = $item_tmp->type;
+       	$items['title'][$i] =$item_tmp->title;
+//	$items['title'][$i] = "[".$item_tmp->type."]" . $item_tmp->title;
+	$items['url'][$i] = url("node/".$items['nid'][$i], array('absolute' => TRUE));
+	$i++;
+ //   echo $i."\n";
+    }
+	//echo print_r($items);
+    return $items;
+}
+
+function _custom_filter_filter($filter_condition){
+  //  $filter_condition = "content_type_page";
+    $sql = "SELECT `field_group_type_value` FROM {$filter_condition}";
+    $res = db_query($sql);//搜索数据库，drupal真给力啊！都不用写初始条件了
+    $condition_type = array();
+    $i = 0 ;
+    while($row = db_fetch_object($res)){
+        $condition_type[$i] = $row->field_group_type_value;
+        $i++;
+    }//将提取出的值赋值给数组
+    $condition_result = array_values(array_unique($condition_type));
+/*地点选择*/
+    $sql = "SELECT  `field_location_value`  FROM {`content_type_event`}";
+    $res = db_query($sql);
+    $condition_location = array();
+    $i = 0 ;
+    while($row = db_fetch_object($res)){
+	if($row->field_location_value){    
+	    $condition_location[$i] = $row->field_location_value;
+	    $i++;
+	}
+    }
+    $sql = "SELECT  `field_place_value`  FROM {`content_type_group`}";
+    $res = db_query($sql);
+    while($row = db_fetch_object($res)){
+	if($row->field_place_value){    
+	    $condition_location[$i] = $row->field_place_value;
+	    $i++;
+	}
+    }
+    $location_result = array_values(array_unique($condition_location));
+/*地点选择END*/
+
+    $radio = "<div id='filter-title'><div class='title-inner'><span>近期活动</span></div></div><div id='filter-content'><div id='filter-type' class='filter-condition'> <div class='condition-title'>按类型</div><dl id='show-type'><dt><li class='condition-type' id='type-0'><span class='type-inner'>全部</span></li></dt><dd>";
+    //将重复的数组值去掉，然后重新排列
+    for( $j = 1 ; $j <= count( $condition_result ) ; $j++ ){
+	$k = $j-1;
+        $tmp ="<li class='condition-type' id='type-$j'><span class='type-inner'>$condition_result[$k]</span></li>";
+        $radio = $radio . $tmp ;
+    }
+    $radio = $radio . "</dd></dl></div><div id='filter-address' class='filter-condition'><div class='condition-title'>按省市</div><dl id='show-location'><dt><li class='condition-location' id='location-0'><span class='location-inner'>全部</span></li></dt></span><dd>";
+     for( $j = 1 ; $j <= count( $location_result ) ; $j++ ){
+	$k = $j-1;
+        $tmp ="<li class='condition-location' id='location-$j'><span class='location-inner'>$location_result[$k]</span></li>";
+        $radio = $radio . $tmp ;
+    }   
+
+    $radio = $radio . "</dd></dl></div>";
+    return $radio;
+
+}
+
+/**
+* Implementation of hook_theme().
+*/
+function custom_filter_theme(){
+    return array(
+	'custom_filter' => array(
+	    'arguments' => array('text' => NULL, 'origin' => NULL),
+        ),
+    );
+}
+
+function theme_custom_filter($items){
+ //   $field_label="社团类型";
+    $module_path = drupal_get_path('module', 'custom_filter');
+    $full_path = $module_path .'/custom_filter.css';
+    drupal_add_css($full_path);
+    drupal_add_js($module_path .'/custom_filter.js');
+    $opts = array('absolute' => TRUE);
+    $post_url = url('filter.json', $opts);
+    drupal_add_js(
+	array('custom_filter' =>
+	    array("post_url"=>$post_url)), 
+	'setting'
+    );
+    $item = _custom_filter_filter("content_type_group");
+    for( $j = 0 ; $j < 10 ; $j++ ){
+	$k = $j%4+1;
+	$result_num = "shtg-".$k ;
+	$output = $output . '<li class="type-title  '.$result_num.'" ><a class="author-title" href="'.$items['url'][$j].'"><span class="lan">
+	     ['.$items['type'][$j].']</span>'.t(check_plain($items['title'][$j])).'</a></li>';
+    }
+    $output = $item.'<div id ="search-result"><div id="show-title">查询结果</div><div class="sy-cxbiaotixia"></div><div id="show-text"><ul class="result-1-1">'.$output.'</ul></div></div></div>';
+    return $output;
+}
+
+

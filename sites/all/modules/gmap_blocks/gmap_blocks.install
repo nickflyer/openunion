@@ -1,0 +1,209 @@
+<?php
+// $Id: gmap_blocks.install,v 1.8 2010/05/01 11:59:51 skilip Exp $
+
+/*
+ * @file
+ * Install file for GMap Blocks.
+ */
+
+/*
+ * Implementation of hook_install().
+ */
+function gmap_blocks_install() {
+  // Use schema API to create database table.
+  drupal_install_schema('gmap_blocks');
+  drupal_set_message(t('GMap Blocks database table has been installed.'));
+}
+
+/*
+ * Implementation of hook_uninstall().
+ */
+function gmap_blocks_uninstall() {
+  // Use schema api to delete database table.
+  drupal_uninstall_schema('gmap_blocks');
+}
+
+/*
+ * Implementation of hook_schema().
+ */
+function gmap_blocks_schema() {
+  $schema['gmap_blocks_blocks'] = array(
+    'description' => 'Stores settings for each GMap Block.',
+    'fields' => array(
+      'bid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'An unique identifier for each block.',
+      ),
+      'name' => array(
+        'type' => 'varchar',
+        'length' => '100',
+        'not null' => TRUE,
+        'description' => 'The name of the block.',
+      ),
+      'settings' => array(
+        'description' => 'The serialized settings for the GMap Block.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+    ),
+    'primary key' => array(
+      'bid',
+    ),
+  );
+  $schema['gmap_blocks_locations'] = array(
+    'description' => 'Stores locations which can be used in GMap Block.',
+    'fields' => array(
+      'lid' => array(
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'description' => 'An unique identifier for each location.',
+      ),
+      'address' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'The location\'s address.',
+      ),
+      'city' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'The location\'s city.',
+      ),
+      'state' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'The location\'s state.',
+      ),
+      'country' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'The location\'s country.',
+      ),
+      'marker' => array(
+        'description' => 'Whether or not the location uses a marker.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+      'use_icon' => array(
+        'description' => 'Whether or not the location uses a custom marker icon.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 1,
+        'size' => 'tiny',
+      ),
+      'icon_path' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'If a custom icon should be used, this is the path to the icon image.',
+      ),
+      'info' => array(
+        'description' => 'The information displayed in an info window.',
+        'type' => 'text',
+        'not null' => TRUE,
+        'size' => 'big',
+      ),
+      'format' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'Input format id for the info window.',
+      ),
+      'directions' => array(
+        'description' => 'Whether or not the info window has a direction form.',
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+      ),
+      'open' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'size' => 'tiny',
+      ),
+      'latlng' => array(
+        'type' => 'varchar',
+        'length' => '255',
+        'not null' => TRUE,
+        'description' => 'Serialized array of lattitude and longitude data.',
+      ),
+    ),
+    'primary key' => array(
+      'lid',
+    ),
+  );
+  $schema['gmap_blocks_block_locations'] = array(
+    'description' => 'Stores relations between GMap Blocks and locations.',
+    'fields' => array(
+      'bid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The block id.',
+      ),
+      'lid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => 'The location id.',
+      ),
+    ),
+    'indexes' => array(
+      'lid' => array('lid'),
+    ),
+    'primary key' => array('bid', 'lid'),
+  );
+  return $schema;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function gmap_blocks_update_6000(&$sandbox = NULL) {
+  // For most updates, the following is sufficient.
+  $ret = array();
+
+  db_add_field($ret, 'gmap_blocks_locations', 'use_icon', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'tiny'));
+  db_add_field($ret, 'gmap_blocks_locations', 'icon_path', array('type' => 'varchar', 'length' => '255', 'not null' => TRUE));
+  db_add_field($ret, 'gmap_blocks_locations', 'format', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function gmap_blocks_update_6100(&$sandbox = NULL) {
+  // For most updates, the following is sufficient.
+  $ret = array();
+
+  db_add_field($ret, 'gmap_blocks_locations', 'latlng', array('type' => 'varchar', 'length' => '255', 'not null' => TRUE));
+  return $ret;
+}
+
+/**
+ * Implementation of hook_update_N().
+ */
+function gmap_blocks_update_6101(&$sandbox = NULL) {
+  // For most updates, the following is sufficient.
+  $ret = array();
+
+  db_add_field($ret, 'gmap_blocks_locations', 'open', array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'tiny'));
+  return $ret;
+}

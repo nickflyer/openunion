@@ -1,0 +1,28 @@
+<?php
+/**
+ * @file
+ * Checks CTools requirement before allowing OpenLayers Styles UI to be enabled.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function openlayers_styles_ui_requirements($phase) {
+  $requirements = array();
+  $t = get_t();
+
+  if ($phase == 'install') {
+    // Try to find the default plugin.
+    ctools_include('plugins');
+    $plugin = ctools_get_plugins('ctools', 'ctools_export_ui');
+    if (empty($plugin)) {
+      $requirements['openlayers_styles_ui'] = array(
+        'title' => $t('OpenLayers Styles UI'),
+        'value' => $t('Cannot detect CTools Export UI. Please install at least version 6.x-1.7 of CTools.'),
+        'severity' => REQUIREMENTS_ERROR,
+      );
+    }
+  }
+
+  return $requirements;
+}

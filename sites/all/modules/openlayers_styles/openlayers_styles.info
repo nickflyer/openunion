@@ -1,0 +1,14 @@
+name = OpenLayers Styles
+description = Provides extra (possibly external) OpenLayers styles in bulk.
+core = 6.x
+php = 5.2
+dependencies[] = ctools
+dependencies[] = openlayers
+package = OpenLayers
+
+; Information added by drupal.org packaging script on 2012-01-20
+version = "6.x-1.0-alpha1"
+core = "6.x"
+project = "openlayers_styles"
+datestamp = "1327072550"
+

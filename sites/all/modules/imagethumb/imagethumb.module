@@ -1,0 +1,61 @@
+<?php
+// $Id$
+/**
+* @file
+* Module for thumb image.
+*/
+/**
+* Implementation of hook_help()
+*/
+function imagethumb_help($path, $arg){
+    if ($path == 'admin/help#imagethumb') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+
+function imagethumb_block($op = 'list', $delta = 0, $edit = array()){
+   $thumb_file = "sites/all/libraries/phpthumb/ThumbLib.inc.php";
+   require_once "$thumb_file";
+
+   $sql = "SELECT nid FROM `content_field_thumb_image`
+	     WHERE `field_thumb_image_value` = 'Thumb'  LIMIT 0 , 12";
+   $res = db_query($sql);
+   $imagesFid = array();
+   $i = 0;
+   while($row = db_fetch_object($res)){
+	$fid_sql = "SELECT field_content_images_fid FROM `content_field_content_images`
+                WHERE `nid` = $row->nid";
+        $fid_res = db_query($fid_sql);
+        $fid_row = db_fetch_object($fid_res);
+	$imagesFid = $fid_row->field_content_images_fid;
+	$images_sql = "SELECT *  FROM `files` WHERE `fid` = $imagesFid";
+	$images_res = db_query($images_sql);
+	$images_row = db_fetch_object($images_res);
+        $fileName[$i] = $images_row->filename;
+        $filePath[$i] = $images_row->filepath;
+	$i++;
+   }
+   $saveDir = "sites/default/files/thumb-image/";
+   for( $j=0; $j<$i; $j++ ){
+      $thumb = PhpThumbFactory::create($filePath[$j]);
+      $thumb->resize(131, 131);
+      $thumb->cropFromCenter(131, 77);
+      $thumb->save($saveDir.$fileName[$j],'jpg');  	
+   }
+
+   switch ($op){
+        case 'list':
+           $blocks[0]['info'] = t('ImageThumb');
+           return $blocks;
+        case 'view':
+           $blocks['subject'] = t('ImageThumb');
+           $blocks['content'] = "<div class='try'>Num:".$i.":".$filePath['2']."</div>";
+           return $blocks;
+   }
+}
+
+function imagethumb_cron() {
+   $thumb_file = "/sites/all/libraries/phpthumb/ThumbLib.inc.php";
+}

@@ -1,0 +1,17 @@
+<?php
+
+/**
+ * Implementation of hook_uninstall()
+ */
+function quant_uninstall() {
+  // Delete variables
+  foreach (array(
+    'quant_height',
+    'quant_weight',
+    'quant_visible',
+    'quant_palette',
+    'quant_use_images',
+  ) as $var) {
+    variable_del($var);
+  }
+}

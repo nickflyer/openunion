@@ -1,0 +1,348 @@
+<?php
+// $Id: gmap_blocks.module,v 1.6 2010/05/01 11:32:12 skilip Exp $
+
+/**
+ * @file
+ *
+ * Declares all needed hooks and required functions for the GMap Blocks module
+ */
+
+// This is the number of maximum allowed locations per map, without using an API key
+define('GMAP_API_QUERY_LIMIT', 10);
+
+/**
+ * Implementation of hook_perm().
+ */
+function gmap_blocks_perm() {
+  return array('administer gmap blocks');
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function gmap_blocks_menu() {
+  $items['admin/build/gmap_blocks'] = array(
+    'title' => 'GMap Blocks',
+    'description' => 'Configure GMap blocks.',
+    'page callback' => 'gmap_blocks_overview_page',
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+  );
+
+  // Top level tabs
+  $items['admin/build/gmap_blocks/blocks'] = array(
+    'title' => 'Blocks',
+    'description' => 'Overview of all blocks.',
+    'weight' => 0,
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/build/gmap_blocks/locations'] = array(
+    'title' => 'Locations',
+    'weight' => 10,
+    'page callback' => 'gmap_blocks_overview_page',
+    'page arguments' => array(3),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/build/gmap_blocks/settings'] = array(
+    'title' => 'Settings',
+    'weight' => 15,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_settings_page'),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+
+  // Secondary tabs for blocks
+  $items['admin/build/gmap_blocks/blocks/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $items['admin/build/gmap_blocks/blocks/add'] = array(
+    'title' => 'Add block',
+    'weight' => 5,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_block_form'),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/build/gmap_blocks/blocks/%gmap_blocks_block/edit'] = array(
+    'title' => 'Edit block',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_block_form', 4),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+  );
+  $items['admin/build/gmap_blocks/blocks/%gmap_blocks_block/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_delete_form', 'block', 4),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+  );
+
+  // Secondary tabs for locations
+  $items['admin/build/gmap_blocks/locations/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+  $items['admin/build/gmap_blocks/locations/add'] = array(
+    'title' => 'Add location',
+    'weight' => 5,
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_location_form'),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+    'type' => MENU_LOCAL_TASK,
+  );
+  $items['admin/build/gmap_blocks/locations/%gmap_blocks_location/edit'] = array(
+    'title' => 'Edit location',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_location_form', 4),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+  );
+  $items['admin/build/gmap_blocks/locations/%gmap_blocks_location/delete'] = array(
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('gmap_blocks_delete_form', 'location', 4),
+    'access arguments' => array('administer gmap blocks'),
+    'file' => 'gmap_blocks.admin.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function gmap_blocks_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      foreach (gmap_blocks_get_blocks() as $gmap_block) {
+        $blocks[$gmap_block['bid']]['info'] = t('GMap (!name)', array('!name' => $gmap_block['name']));
+      }
+      return $blocks;
+    case 'configure':
+      $description = t('This block is created by the GMap Blocks module. You can configure this block !gmap_block_config or create a new block at the !gmap_blocks_overview',  array(
+        '!gmap_block_config' => l(t('here'), "admin/build/gmap_blocks/blocks/$delta/edit"),
+        '!gmap_blocks_overview' => l(t('GMap Blocks overview page'), 'admin/build/gmap_blocks'))
+      );
+      return array('gmap_blocks_description' => array('#value' => '<div class="description">'. $description .'</div>'));
+    case 'view':
+      module_load_include('content.inc', 'gmap_blocks');
+      return gmap_blocks_content($delta);
+  }
+}
+
+/**
+ * Implementation of hook_theme().
+ */
+function gmap_blocks_theme() {
+  return array(
+    'gmap_blocks_block_form' => array(
+      'file' => 'gmap_blocks.admin.inc',
+      'arguments' => array('form' => array()),
+    ),
+    'gmap_blocks_location_title' => array(
+      'file' => 'gmap_blocks.admin.inc',
+      'arguments' => array('location' => array()),
+    ),
+  );
+}
+
+/**
+ * Gets all gmap blocks from the db.
+ */
+function gmap_blocks_get_blocks() {
+  static $blocks = array();
+
+  if (!empty($blocks)) {
+    return $blocks;
+  }
+
+  $sql = "SELECT bid, name
+    FROM {gmap_blocks_blocks}";
+
+  $result = db_query($sql);
+
+  while ($block = db_fetch_array($result)) {
+    $blocks[] = $block;
+  }
+
+  return (!empty($blocks) ? $blocks : array());
+}
+
+/**
+ * Gets all gmap locations from the db.
+ */
+function gmap_blocks_get_locations() {
+  static $locations = array();
+
+  if (!empty($locations)) {
+    return $locations;
+  }
+
+  $sql = "SELECT lid, address, city, state, country, marker, info
+    FROM {gmap_blocks_locations}";
+
+  $result = db_query($sql);
+
+  while ($location = db_fetch_array($result)) {
+    $locations[] = $location;
+  }
+
+  return (!empty($locations) ? $locations : array());
+}
+
+/**
+ * Get a single gmap block from the db.
+ */
+function gmap_blocks_block_load($bid) {
+  $sql = "SELECT bid, name, settings
+    FROM {gmap_blocks_blocks}
+    WHERE bid = %d";
+  $block = db_fetch_array(db_query($sql, $bid));
+
+  if ($block) {
+    $block['settings'] = unserialize($block['settings']);
+    $block['locations'] = gmap_blocks_block_locations_load($bid);
+    return $block;
+  }
+  else {
+    return array();
+  }
+}
+
+/**
+ * Get a single location from the db.
+ */
+function gmap_blocks_location_load($lid) {
+  $sql = "SELECT lid, address, city, state, country, marker, use_icon, icon_path, info, format, open, directions, latlng
+    FROM {gmap_blocks_locations}
+    WHERE lid = %d";
+  $location = db_fetch_array(db_query($sql, $lid));
+
+  return ($location) ? $location : array();
+}
+
+/**
+ * Get gmap block locations from the db.
+ */
+function gmap_blocks_block_locations_load($bid) {
+  $locations = array();
+  $sql = "SELECT lid
+    FROM {gmap_blocks_block_locations}
+    WHERE bid = %d";
+
+  $query = db_query($sql, $bid);
+  while ($lid = db_result($query)) {
+    $locations[$lid] = gmap_blocks_location_load($lid);
+  }
+  return $locations;
+}
+
+/**
+ * Saves or updates a block into the database
+ */
+function gmap_blocks_block_save(&$block) {
+  // Create the arguments array used in db_query
+  $arguments = array(
+    'name' => $block['name'],
+    'settings' => serialize($block['settings']),
+  );
+
+  // Check if we need to update or insert a db entry
+  if (isset($block['bid'])) {
+    $arguments['bid'] = $block['bid'];
+    $sql ="UPDATE {gmap_blocks_blocks}
+      SET name = '%s', settings = '%s'
+      WHERE bid = %d";
+    $message = t('The !type %name has been updated!', array('%name' => $block['name'], '!type' => t('block')));
+
+    // Delete all block location relations stored in the db
+    db_query("DELETE FROM {gmap_blocks_block_locations} WHERE bid = %d", $block['bid']);
+  }
+  else {
+    $sql = "INSERT INTO {gmap_blocks_blocks}
+      (name, settings)
+      VALUES ('%s', '%s')";
+    $message = t('The !type has been saved!', array('!type' => t('block')));
+  }
+
+  // Execute the query
+  db_query($sql, $arguments);
+
+  // If a new block is created, get it's id
+  if (!isset($block['bid'])) {
+    $block['bid'] = db_last_insert_id('gmap_blocks_blocks', 'bid');
+  }
+
+  // Stor block location relations
+  if (!empty($block['locations'])) {
+    $sql = "INSERT INTO {gmap_blocks_block_locations}
+      (bid, lid)
+      VALUES (%d, %d)";
+
+    foreach (array_keys($block['locations']) as $lid) {
+      db_query($sql, $block['bid'], $lid);
+    }
+  }
+
+  drupal_set_message($message);
+}
+
+/**
+ * Saves or updates a location into the database
+ */
+function gmap_blocks_location_save(&$location) {
+  // Create the arguments array used in db_query
+  $arguments = array(
+    'address' => $location['address'],
+    'city' => $location['city'],
+    'state' => $location['state'],
+    'country' => $location['country'],
+    'marker' => $location['marker'],
+    'use_icon' => $location['use_icon'],
+    'icon' => $location['icon_path'],
+    'info' => $location['info'],
+    'format' => $location['format'],
+    'open' => $location['open'],
+    'directions' => $location['directions'],
+    'latlng' => $location['latlng'],
+  );
+
+  // Check if we need to update or insert a db entry
+  if (isset($location['lid'])) {
+    $arguments['lid'] = $location['lid'];
+    $sql ="UPDATE {gmap_blocks_locations}
+      SET address = '%s', city = '%s', state = '%s', country = '%s', marker = %d, use_icon = %d, icon_path = '%s', info = '%s', format = %d, open = %d, directions = %d, latlng = '%s'
+      WHERE lid = %d";
+    $message = t('The !type %name has been updated!', array('%name' => $location['name'], '!type' => t('location')));
+  }
+  else {
+    $sql = "INSERT INTO {gmap_blocks_locations}
+      (address, city, state, country, marker, use_icon, icon_path, info, format, open, directions, latlng)
+      VALUES ('%s', '%s', '%s', '%s', %d, %d, '%s', '%s', %d, %d, %d, '%s')";
+    $message = t('The !type has been saved!', array('!type' => t('location')));
+  }
+
+  // Execute the query
+  db_query($sql, $arguments);
+
+  // If a new location is created, get it's id
+  if (!isset($location['lid'])) {
+    $location['lid'] = db_last_insert_id('gmap_blocks_locations', 'lid');
+  }
+
+  drupal_set_message($message);
+}
+
+/**
+ * Helper function for displaying a message to the user when a map exceeds the limit of locations per block.
+ */
+function _gmap_api_query_limit_message() {
+  return t('This block exceeds Google Maps limit of !limit locations per map. To get round this limitation, you need to set an API key on the !link', array('!limit' => GMAP_API_QUERY_LIMIT, '!link' => l(t('settings page'), 'admin/build/gmap_blocks/settings')));
+}

@@ -1,0 +1,521 @@
+# $Id: gmap_blocks.pot,v 1.2 2010/05/01 11:59:51 skilip Exp $
+#
+# LANGUAGE translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  gmap_blocks.admin.inc, v 0.1 2009/07/06 08:00:01 skilip
+#  gmap_blocks.inc, v 0.1 2009/07/06 08:00:01 skilip
+#  gmap_blocks.contents.inc, v 0.1 2009/07/06 08:00:01 skilip
+#  gmap_blocks.info, v 0.1, 2008/03/27 19:24:53, skilip
+#  gmap_blocks.install: n/a
+#  gmap_blocks.js,v 0.1 2009/07/06 08:00:01 skilip
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-07-06 09:12+0200\n"
+"PO-Revision-Date: YYYY-mm-DD HH:MM+ZZZZ\n"
+"Last-Translator: NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: gmap_blocks.admin.inc:24;509
+msgid "edit"
+msgstr ""
+
+#: gmap_blocks.admin.inc:25
+msgid "delete"
+msgstr ""
+
+#: gmap_blocks.admin.inc:30
+msgid "No data yet"
+msgstr ""
+
+#: gmap_blocks.admin.inc:30
+msgid "Add !type"
+msgstr ""
+
+#: gmap_blocks.admin.inc:33;65
+msgid "Name"
+msgstr ""
+
+#: gmap_blocks.admin.inc:33
+msgid "operation"
+msgstr ""
+
+#: gmap_blocks.admin.inc:72
+msgid "Options"
+msgstr ""
+
+#: gmap_blocks.admin.inc:78
+msgid "Map type"
+msgstr ""
+
+#: gmap_blocks.admin.inc:80;886
+msgid "ROADMAP"
+msgstr ""
+
+#: gmap_blocks.admin.inc:81;887
+msgid "SATELLITE"
+msgstr ""
+
+#: gmap_blocks.admin.inc:82;888
+msgid "HYBRID"
+msgstr ""
+
+#: gmap_blocks.admin.inc:83;889
+msgid "TERRAIN"
+msgstr ""
+
+#: gmap_blocks.admin.inc:86
+msgid "In addition to the familiar \"painted\" road map tiles, the Google Maps API also supports other maps types."
+msgstr ""
+
+#: gmap_blocks.admin.inc:93
+msgid "Zoom level"
+msgstr ""
+
+#: gmap_blocks.admin.inc:95
+msgid "The zoom level defines the resolution of the GMap view."
+msgstr ""
+
+#: gmap_blocks.admin.inc:100
+msgid "Scrollwheel zooming"
+msgstr ""
+
+#: gmap_blocks.admin.inc:101
+msgid "If unchecked, scrollwheel zooming is disabled on the map."
+msgstr ""
+
+#: gmap_blocks.admin.inc:108
+msgid "Dimensions"
+msgstr ""
+
+#: gmap_blocks.admin.inc:114
+msgid "Width"
+msgstr ""
+
+#: gmap_blocks.admin.inc:116
+msgid "The width of the block"
+msgstr ""
+
+#: gmap_blocks.admin.inc:121
+msgid "Height"
+msgstr ""
+
+#: gmap_blocks.admin.inc:123
+msgid "The height of the block"
+msgstr ""
+
+#: gmap_blocks.admin.inc:129
+msgid "Controls"
+msgstr ""
+
+#: gmap_blocks.admin.inc:135
+msgid "Use this custom control set"
+msgstr ""
+
+#: gmap_blocks.admin.inc:137
+msgid "Check this option to create a custom control set. Otherwise the default GMap User Interface will be used."
+msgstr ""
+
+#: gmap_blocks.admin.inc:142
+msgid "Custom Control Set"
+msgstr ""
+
+#: gmap_blocks.admin.inc:150
+msgid "Navigation control style"
+msgstr ""
+
+#: gmap_blocks.admin.inc:152;166;178
+msgid "Disabled"
+msgstr ""
+
+#: gmap_blocks.admin.inc:153;875
+msgid "SMALL"
+msgstr ""
+
+#: gmap_blocks.admin.inc:154;876
+msgid "ZOOM_PAN"
+msgstr ""
+
+#: gmap_blocks.admin.inc:155;877
+msgid "ANDROID"
+msgstr ""
+
+#: gmap_blocks.admin.inc:156;169;878;883
+msgid "DEFAULT"
+msgstr ""
+
+#: gmap_blocks.admin.inc:159
+msgid "The Navigation control displays a large pan/zoom control as used on Google Maps. This control appears in the top left corner of the map. You can adjust the size of this control within the Map options object upon setup."
+msgstr ""
+
+#: gmap_blocks.admin.inc:164
+msgid "Map type control"
+msgstr ""
+
+#: gmap_blocks.admin.inc:167;881
+msgid "HORIZONTAL_BAR"
+msgstr ""
+
+#: gmap_blocks.admin.inc:168;882
+msgid "DROPDOWN_MENU"
+msgstr ""
+
+#: gmap_blocks.admin.inc:172
+msgid "The MapType control lets the user toggle between map types (such as ROADMAP and SATELLITE). You can adjust the behavior of this control through the Map options object upon setup."
+msgstr ""
+
+#: gmap_blocks.admin.inc:176
+msgid "Scale control"
+msgstr ""
+
+#: gmap_blocks.admin.inc:179
+msgid "Enabled"
+msgstr ""
+
+#: gmap_blocks.admin.inc:182
+msgid "The Scale control displays a map scale element."
+msgstr ""
+
+#: gmap_blocks.admin.inc:202
+msgid "Remove"
+msgstr ""
+
+#: gmap_blocks.admin.inc:227;267 gmap_blocks.module:94
+msgid "Add location"
+msgstr ""
+
+#: gmap_blocks.admin.inc:231
+msgid "Click !link to create a new location."
+msgstr ""
+
+#: gmap_blocks.admin.inc:231 gmap_blocks.module:130
+msgid "here"
+msgstr ""
+
+#: gmap_blocks.admin.inc:238;280;452
+msgid "Save"
+msgstr ""
+
+#: gmap_blocks.admin.inc:239;276
+msgid "Delete"
+msgstr ""
+
+#: gmap_blocks.admin.inc:315
+msgid "Are you sure you want to delete !type %name"
+msgstr ""
+
+#: gmap_blocks.admin.inc:315
+msgid "By confirming to delete the !type %name, all data is lost. This action can not be undone!"
+msgstr ""
+
+#: gmap_blocks.admin.inc:317
+msgid "No valid input. Please return to the !link"
+msgstr ""
+
+#: gmap_blocks.admin.inc:317
+msgid "overview"
+msgstr ""
+
+#: gmap_blocks.admin.inc:340
+msgid "The !type %name has been deleted!"
+msgstr ""
+
+#: gmap_blocks.admin.inc:343
+msgid "Couldn't delete !type %name!"
+msgstr ""
+
+#: gmap_blocks.admin.inc:361
+msgid "Address"
+msgstr ""
+
+#: gmap_blocks.admin.inc:367
+msgid "City"
+msgstr ""
+
+#: gmap_blocks.admin.inc:373
+msgid "State"
+msgstr ""
+
+#: gmap_blocks.admin.inc:378
+msgid "Country"
+msgstr ""
+
+#: gmap_blocks.admin.inc:384
+msgid "Marker"
+msgstr ""
+
+#: gmap_blocks.admin.inc:385
+msgid "Markers identify locations on the map"
+msgstr ""
+
+#: gmap_blocks.admin.inc:390
+msgid "Marker icon"
+msgstr ""
+
+#: gmap_blocks.admin.inc:396
+msgid "Use a custom icon"
+msgstr ""
+
+#: gmap_blocks.admin.inc:399
+msgid "Check this if you want this icon to be used instead of Google's default marker."
+msgstr ""
+
+#: gmap_blocks.admin.inc:403
+msgid "Path to the icon"
+msgstr ""
+
+#: gmap_blocks.admin.inc:406
+msgid "The path to the image you would like to use as an icon for this location."
+msgstr ""
+
+#: gmap_blocks.admin.inc:410
+msgid "Upload a new icon image"
+msgstr ""
+
+#: gmap_blocks.admin.inc:412
+msgid "If you don't have direct file access to the server, use this field to upload your icon."
+msgstr ""
+
+#: gmap_blocks.admin.inc:416
+msgid "Info window"
+msgstr ""
+
+#: gmap_blocks.admin.inc:419
+msgid "Here you can add some text or HTML to add to an overlaying info balloon"
+msgstr ""
+
+#: gmap_blocks.admin.inc:423
+msgid "Content"
+msgstr ""
+
+#: gmap_blocks.admin.inc:430
+msgid "Use Directions"
+msgstr ""
+
+#: gmap_blocks.admin.inc:431
+msgid "If checked, a directions form will be added to the info window."
+msgstr ""
+
+#: gmap_blocks.admin.inc:437
+msgid "Open on load"
+msgstr ""
+
+#: gmap_blocks.admin.inc:438
+msgid "If checked, the info window will be opened on page load."
+msgstr ""
+
+#: gmap_blocks.admin.inc:473
+msgid "The icon image can not be found. Check your entry or upload an icon first."
+msgstr ""
+
+#: gmap_blocks.admin.inc:514
+msgid "No locations added yet!"
+msgstr ""
+
+#: gmap_blocks.admin.inc:517
+msgid "locations"
+msgstr ""
+
+#: gmap_blocks.admin.inc:517
+msgid "center"
+msgstr ""
+
+#: gmap_blocks.admin.inc:517
+msgid "operations"
+msgstr ""
+
+#: gmap_blocks.admin.inc:567
+msgid "API Key"
+msgstr ""
+
+#: gmap_blocks.admin.inc:569
+msgid "If a GMap Block is created, and the block contains more than !limit locations, using an API Key is compulsory. You can read more about GMap API keys, or create one at !link"
+msgstr ""
+
+#: gmap_blocks.admin.inc:875
+msgid "Displays a mini-zoom control, consisting of only + and - buttons. This style is appropriate for mobile devices."
+msgstr ""
+
+#: gmap_blocks.admin.inc:876
+msgid "Displays the standard zoom slider control with a panning control, as on Google Maps."
+msgstr ""
+
+#: gmap_blocks.admin.inc:877
+msgid "Displays the small zoom control as used on the native Maps application on Android devices."
+msgstr ""
+
+#: gmap_blocks.admin.inc:878
+msgid "Picks an appropriate navigation control based on the map's size and the device on which the map is running."
+msgstr ""
+
+#: gmap_blocks.admin.inc:881
+msgid "Displays the array of controls as buttons in a horizontal bar as is shown on Google Maps."
+msgstr ""
+
+#: gmap_blocks.admin.inc:882
+msgid "Displays a single button control allowing you to select the map type via a dropdown menu."
+msgstr ""
+
+#: gmap_blocks.admin.inc:883
+msgid "Displays the \"default\" behavior, which depends on screen size and may change in future versions of the API"
+msgstr ""
+
+#: gmap_blocks.admin.inc:886
+msgid "Displays the normal, default 2D tiles of Google Maps."
+msgstr ""
+
+#: gmap_blocks.admin.inc:887
+msgid "Displays photographic tiles."
+msgstr ""
+
+#: gmap_blocks.admin.inc:888
+msgid "Displays a mix of photographic tiles and a tile layer for prominent features (roads, city names)."
+msgstr ""
+
+#: gmap_blocks.admin.inc:889
+msgid "Displays physical relief tiles for displaying elevation and water features (mountains, rivers, etc.)."
+msgstr ""
+
+#: gmap_blocks.admin.inc:901
+msgid "The file required for determining the locations longitude and latitude could not be opened!"
+msgstr ""
+
+#: gmap_blocks.admin.inc:902
+msgid "A geocoding or directions request could not be successfully processed, yet the exact reason for the failure is unknown."
+msgstr ""
+
+#: gmap_blocks.admin.inc:903
+msgid "An empty address was specified in the HTTP q parameter."
+msgstr ""
+
+#: gmap_blocks.admin.inc:904
+msgid "No corresponding geographic location could be found for the specified address, possibly because the address is relatively new, or because it may be incorrect."
+msgstr ""
+
+#: gmap_blocks.admin.inc:905
+msgid "The geocode for the given address or the route for the given directions query cannot be returned due to legal or contractual reasons."
+msgstr ""
+
+#: gmap_blocks.admin.inc:906
+msgid "The given key is either invalid or does not match the domain for which it was given."
+msgstr ""
+
+#: gmap_blocks.admin.inc:907
+msgid "The given key has gone over the requests limit in the 24 hour period or has submitted too many requests in too short a period of time. If you're sending multiple requests in parallel or in a tight loop, use a timer or pause in your code to make sure you don't send the requests too quickly."
+msgstr ""
+
+#: gmap_blocks.content.inc:110
+msgid "Plan route..."
+msgstr ""
+
+#: gmap_blocks.content.inc:120
+msgid "Traveling from"
+msgstr ""
+
+#: gmap_blocks.content.inc:124
+msgid "Directions"
+msgstr ""
+
+#: gmap_blocks.module:125
+msgid "GMap (!name)"
+msgstr ""
+
+#: gmap_blocks.module:129
+msgid "This block is created by the GMap Blocks module. You can configure this block !gmap_block_config or create a new block at the !gmap_blocks_overview"
+msgstr ""
+
+#: gmap_blocks.module:131
+msgid "GMap Blocks overview page"
+msgstr ""
+
+#: gmap_blocks.module:263;323
+msgid "The !type %name has been updated!"
+msgstr ""
+
+#: gmap_blocks.module:263;272
+msgid "block"
+msgstr ""
+
+#: gmap_blocks.module:272;329
+msgid "The !type has been saved!"
+msgstr ""
+
+#: gmap_blocks.module:323;329
+msgid "location"
+msgstr ""
+
+#: gmap_blocks.module:347
+msgid "This block exceeds Google Maps limit of !limit locations per map. To get round this limitation, you need to set an API key on the !link"
+msgstr ""
+
+#: gmap_blocks.module:347
+msgid "settings page"
+msgstr ""
+
+#: gmap_blocks.module:17
+msgid "administer gmap blocks"
+msgstr ""
+
+#: gmap_blocks.module:25 gmap_blocks.info:0
+msgid "GMap Blocks"
+msgstr ""
+
+#: gmap_blocks.module:26
+msgid "Configure GMap blocks."
+msgstr ""
+
+#: gmap_blocks.module:34
+msgid "Blocks"
+msgstr ""
+
+#: gmap_blocks.module:35
+msgid "Overview of all blocks."
+msgstr ""
+
+#: gmap_blocks.module:40
+msgid "Locations"
+msgstr ""
+
+#: gmap_blocks.module:49
+msgid "Settings"
+msgstr ""
+
+#: gmap_blocks.module:60;89
+msgid "List"
+msgstr ""
+
+#: gmap_blocks.module:65
+msgid "Add block"
+msgstr ""
+
+#: gmap_blocks.module:74
+msgid "Edit block"
+msgstr ""
+
+#: gmap_blocks.module:103
+msgid "Edit location"
+msgstr ""
+
+#: gmap_blocks.install:15
+msgid "GMap Blocks database table has been installed."
+msgstr ""
+
+#: gmap_blocks.info:0
+msgid "Create Google Maps blocks for your website"
+msgstr ""
+
+#: gmap_blocks.js:0
+msgid "No results found"
+msgstr ""
+
+#: gmap_blocks.js:0
+msgid "Geocode could not find '!address' for the following reason: !status"
+msgstr ""
+

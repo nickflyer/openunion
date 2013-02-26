@@ -1,0 +1,58 @@
+<?php
+// $Id$
+
+/**
+ * @file
+ * Install, update and uninstall functions for the block_morelink module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function block_morelink_schema() {
+  $schema['block_morelink'] = array(
+    'description' => 'Stores more link path.',
+    'fields' => array(
+      'module' => array(
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => TRUE,
+        'description' => "The block's origin module, from {block}.module.",
+      ),
+      'delta' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => "The block's unique delta within module, from {block}.delta.",
+      ),
+      'url' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The more link url of a block.",
+      ),
+      'title' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => "The more link title of a block.",
+      ),
+    ),
+    'primary key' => array('module', 'delta'),
+    'indexes' => array(
+      'url' => array('url'),
+    ),
+  );
+  return $schema;
+}
+
+function block_morelink_install(){
+  drupal_install_schema('block_morelink');
+}
+
+function block_morelink_uninstall(){
+  drupal_uninstall_schema('block_morelink');
+  //db_query("DELETE FROM {variable} WHERE name LIKE 'block_morelink_%%'");
+  variable_del('block_morelink_label');
+}
+

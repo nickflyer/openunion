@@ -1,0 +1,25 @@
+<?php
+// $Id$
+/**
+* @file
+* Module for fetching data from Goodreads.com.
+* This module provides block content retrieved from a
+* Goodreads.com bookshelf.
+* @see http://www.goodreads.com
+*/
+/**
+* Implementation of hook_block()
+*/
+function goodreads_block($op='list', $delta=0, $edit=array()) {
+   switch ($op) {
+	case 'list':
+	    $blocks[0]['info'] = t('Goodreads Bookshelf');
+	return $blocks;
+	case 'view':
+	   $blocks['subject'] = t('On the Bookshelf');
+	   $blocks['content'] = t('Temporary content');
+	return $blocks;
+   }
+}
+
+

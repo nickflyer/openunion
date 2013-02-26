@@ -1,0 +1,13 @@
+name = OpenLayers Styles CCK
+description = Provides CCK fields for selecting OpenLayers styles.
+package = OpenLayers
+dependencies[] = content
+dependencies[] = openlayers_styles
+core = 6.x
+
+; Information added by drupal.org packaging script on 2012-01-20
+version = "6.x-1.0-alpha1"
+core = "6.x"
+project = "openlayers_styles"
+datestamp = "1327072550"
+

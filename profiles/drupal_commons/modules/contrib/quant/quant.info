@@ -1,0 +1,11 @@
+name = Quant
+description = Display quantitative analytical charts of your site's activity over time periods
+dependencies[] = chart
+core = 6.x
+
+; Information added by drupal.org packaging script on 2012-02-22
+version = "6.x-1.2"
+core = "6.x"
+project = "quant"
+datestamp = "1329951045"
+

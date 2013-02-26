@@ -1,0 +1,372 @@
+<?php
+/**
+ * @file
+ * Provide extra styles from miscellaneous sources.
+ */
+
+/**
+ * Delimiter for qualifying style names.
+ */
+define('OPENLAYERS_STYLES_QUALIFIER_DELIMITER', ':');
+
+/**
+ * Implements hook_ctools_plugin_api().
+ */
+function openlayers_styles_ctools_plugin_api($owner, $plugin_type) {
+  if ($owner == 'openlayers') {
+    switch ($plugin_type) {
+      case 'openlayers_styles':
+        return array('version' => 1);
+    }
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function openlayers_styles_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'openlayers_styles') {
+    switch ($plugin_type) {
+      case 'openlayers_styles_providers':
+        return 'providers';
+    }
+  }
+}
+
+/**
+ * Implements hook_openlayers_styles().
+ */
+function openlayers_styles_openlayers_styles() {
+  $styles = array();
+
+  // Retrieve each source.
+  $sources = openlayers_styles_source_load_multiple();
+  foreach ($sources as $source) {
+    $source_styles = openlayers_styles_get_source_styles($source);
+    $styles = array_merge($styles, $source_styles);
+  }
+
+  return $styles;
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter() for openlayers_ui_presets_form.
+ * Add variable styling remark.
+ */
+function openlayers_styles_form_openlayers_ui_presets_form_alter(&$form, &$form_state) {
+  $form['layerstyles']['styles']['variable'] = array(
+    '#type' => 'item',
+    '#title' => t('Named variable style'),
+    '#value' => t('To configure named variable styling for each layer, go to settings for the "Named styles" behavior.'),
+  );
+}
+
+/**
+ * Implements hook_openlayers_behaviors().
+ */
+function openlayers_styles_openlayers_behaviors() {
+  return array(
+    'openlayers_styles_behavior_named_style' => array(
+      'title' => t('Named styles'),
+      'description' => t('Allows features on a single layer to use different styles.'),
+      'type' => 'layer',
+      'path' => drupal_get_path('module', 'openlayers_styles') .'/behaviors',
+      'file' => 'openlayers_styles_behavior_named_style.inc',
+      'behavior' => array(
+        'class' => 'openlayers_styles_behavior_named_style',
+        'parent' => 'openlayers_behavior',
+      ),
+    ),
+  );
+}
+
+/**
+ * Loads a style source.
+ *
+ * @param $name
+ *   Name of the source to load.
+ * @return
+ *   Style source with the given name.
+ */
+function openlayers_styles_source_load($name) {
+  $result = openlayers_styles_source_load_multiple(array($name));
+  return reset($result);
+}
+
+/**
+ * Loads multiple style sources by name.
+ *
+ * @param array $names
+ *   An array of names of the sources to load.
+ * @return
+ *   Style sources with the given name. If no name is given, all are returned.
+ */
+function openlayers_styles_source_load_multiple($names = array()) {
+  ctools_include('export');
+  $result = ctools_export_load_object('openlayers_styles_sources', !empty($names) ? 'names' : 'all', $names);
+  return $result;
+}
+
+/**
+ * Retrieves metadata for the style provider plugin with the given name.
+ */
+function openlayers_styles_get_provider($name) {
+  ctools_include('plugins');
+  return ctools_get_plugins('openlayers_styles', 'openlayers_styles_providers', $name);
+}
+
+/**
+ * Retrieves metadata for all style provider plugins.
+ */
+function openlayers_styles_get_providers() {
+  ctools_include('plugins');
+  return ctools_get_plugins('openlayers_styles', 'openlayers_styles_providers');
+}
+
+/**
+ * Create an instance of the given provider plugin.
+ */
+function openlayers_styles_create_provider($plugin) {
+  ctools_include('plugins');
+  $class = ctools_plugin_get_class($plugin, 'provider');
+  return new $class($plugin);
+}
+
+/**
+ * Reset the cache for styles from a source.
+ */
+function openlayers_styles_clear_styles_cache($source_name = NULL) {
+  openlayers_styles(TRUE);
+  if (isset($source_name)) {
+    $cid = 'openlayers_styles:' . $source_name . ':';
+    cache_clear_all($cid, 'cache', TRUE);
+  }
+  else {
+    cache_clear_all('openlayers_styles:', 'cache', TRUE);
+  }
+}
+
+/**
+ * Get cached styles from a source for OpenLayers styles.
+ */
+function openlayers_styles_get_source_styles($source, $reset = FALSE) {
+  static $styles = array();
+
+  if ($reset || !isset($styles[$source->name])) {
+    $cid = 'openlayers_styles:' . $source->name . ':styles';
+    if (!$reset && $cache = cache_get($cid)) {
+      $styles[$source->name] = $cache->data;
+    }
+    else {
+      $styles[$source->name] = openlayers_styles_retrieve_styles($source, $reset);
+      cache_set($cid, $styles[$source->name]);
+    }
+  }
+
+  return isset($styles[$source->name]) ? $styles[$source->name] : array();
+}
+
+/**
+ * Retrieve styles from a source for OpenLayers styles.
+ */
+function openlayers_styles_retrieve_styles($source, $reset = FALSE) {
+  $styles = array();
+  $source_styles = openlayers_styles_get_raw_styles($source, $reset);
+  foreach ($source_styles as $name => $style) {
+    // Qualify the style object.
+    $style->raw_name = $style->name;
+    $style->raw_title = $style->title;
+    $style->name = $style->qualified_name;
+    $style->title = $style->qualified_title;
+    unset($style->qualified_name);
+    unset($style->qualified_title);
+    $styles[$style->name] = $style;
+  }
+  return $styles;
+}
+
+/**
+ * Get cached styles from a source without namespacing them for OpenLayers.
+ */
+function openlayers_styles_get_raw_styles($source, $reset = FALSE) {
+  static $styles = array();
+
+  if ($reset || !isset($styles[$source->name])) {
+    $cid = 'openlayers_styles:' . $source->name . ':raw';
+    if (!$reset && $cache = cache_get($cid)) {
+      $styles[$source->name] = $cache->data;
+    }
+    else {
+      $styles[$source->name] = openlayers_styles_retrieve_raw_styles($source);
+      cache_set($cid, $styles[$source->name]);
+    }
+  }
+
+  return isset($styles[$source->name]) ? $styles[$source->name] : array();
+}
+
+/**
+ * Retrieve styles from a source without namespacing them.
+ */
+function openlayers_styles_retrieve_raw_styles($source) {
+  static $providers = array();
+  $provider = NULL;
+
+  // Try to use cached provider instances.
+  if (isset($providers[$source->provider])) {
+    $provider = $providers[$source->provider];
+  }
+  // Create instance.
+  elseif ($plugin = openlayers_styles_get_provider($source->provider)) {
+    $provider = openlayers_styles_create_provider($plugin);
+    // Cache instance.
+    $providers[$source->provider] = $provider;
+  }
+  // Skip source with invalid provider.
+  else {
+    return;
+  }
+
+  // Retrieve using provider instance.
+  $styles = $provider->retrieve($source->options, $source);
+
+  // Qualify names and titles.
+  foreach ($styles as $name => &$style) {
+    // Namespace the style object.
+    $style->qualified_name = $source->name . OPENLAYERS_STYLES_QUALIFIER_DELIMITER . $name;
+    $style->qualified_title = t('!source: !style', array('!source' => $source->title, '!style' => $style->title));
+  }
+
+  return $styles;
+}
+
+/**
+ * Normalize a graphic path to an absolute URL.
+ */
+function openlayers_styles_graphic_url($path, $options = array()) {
+  // Quickly check sanity.
+  if ($path === '') {
+    return '';
+  }
+
+  // Add default options.
+  $options += array(
+    'prefix' => '',
+  );
+
+  // Leave absolute URLs alone.
+  if (valid_url($path, TRUE)) {
+    return url($path, $options);
+  }
+
+  // Process base root if given.
+  if (!empty($options['base_url'])) {
+    // Use base root from absolute URL.
+    if (preg_match('`^(https?://[^/]+)`', $options['base_url'], $match)) {
+      $base_root = $match[1];
+    }
+    else {
+      // Abort on invalid given base URL.
+      return FALSE;
+    }
+  }
+  else {
+    // Use base root from current URL.
+    $base_root = $GLOBALS['base_root'];
+  }
+
+  // Normalize relative paths.
+  if (valid_url($path)) {
+    $options['absolute'] = TRUE;
+    // Construct URL from the root.
+    if ($path[0] == '/') {
+      return $base_root . $path;
+    }
+    // Construct a file URL.
+    elseif (file_exists($filepath = $options['prefix'] . $path)) {
+      return file_create_url($filepath);
+    }
+    // Construct URL from the site base or external base.
+    else {
+      return url($path, $options);
+    }
+  }
+
+  // Abort on invalid path. We do this here to leave it up to the caller what to do with the path.
+  return FALSE;
+}
+
+/**
+ * Provides an interface for administrative form and styles retrieval. All
+ * provider plugins must have this class as parent.
+ */
+class openlayers_styles_provider_plugin {
+  /**
+   * Initializes the provider plugin with its definition. 
+   */
+  function __construct($plugin = array()) {
+  }
+
+  /**
+   * Initial default options.
+   *
+   * @return
+   *   Array of default options.
+   */
+  function options_init() {
+    return array();
+  }
+
+  /**
+   * Gets the array of the settings form.
+   *
+   * @param $form
+   *   The stock source form (without the plugin form).
+   * @param $form_state
+   *   The form state array.
+   * @param $options
+   *   Array of default values for the form.
+   * @param $source
+   *   The originating source object for the given options.
+   * @return
+   *   Array of Drupal form elements.
+   */
+  function options_form(&$form, &$form_state, $options = array(), $source = NULL) {
+    return array();
+  }
+
+  /**
+   * Validates options form submission.
+   */
+  function options_form_validate(&$form, &$form_state, $options = array(), $source = NULL) {
+  }
+
+  /**
+   * Retrieve styles from a source.
+   *
+   * @param array $options
+   *   Options configured for the source.
+   * @param array $source
+   *   The style source object itself.
+   * @return array
+   *   An array of OpenLayers style objects keyed by their name in this source (not namespaced).
+   */
+  function retrieve($options, $source) {
+    return array();
+  }
+}
+
+/**
+ * Implements hook_features_pipe_component_alter() for openlayers_styles_sources.
+ * Add dependencies on provider modules.
+ */
+function openlayers_styles_features_pipe_openlayers_styles_sources_alter(&$pipe, $data, &$export) {
+  $plugins = openlayers_styles_get_providers();
+  foreach ($data as $item) {
+    $source = openlayers_styles_source_load($item);
+    if (isset($plugins[$source->provider])) {
+      $provider_module = $plugins[$source->provider]['module'];
+      $pipe['dependencies'][$provider_module] = $provider_module;
+    }
+  }
+}

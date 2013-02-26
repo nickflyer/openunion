@@ -1,0 +1,6 @@
+; $Id$
+name = "Custom Filter"
+description = "Dynamic display of Custom Filter."
+core = 6.x
+php = 5.1
+package = Custom

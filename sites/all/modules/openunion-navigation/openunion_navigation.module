@@ -1,0 +1,160 @@
+<?php
+// $Id$
+/**
+* @file
+* Module for dynamic display of pithy philosophy quotes.
+*/
+/**
+* Implementation of hook_help()
+*/
+function openunion_navigation_help($path, $arg){
+    if ($path == 'admin/help#openunion_navigation') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+
+/**
+* Implementation of hook_block().
+*/
+function openunion_navigation_block($op = 'list', $delta = 0, $edit = array()){
+   switch ($op) {
+	case 'list':
+	   $blocks[0]['info'] = t('OpenUnion Navigation');
+	   return $blocks;
+	case 'view':
+	$items = _openunion_navigation_get();
+
+	//$items = "2222";
+	if(!empty($items)){
+	//echo print_r($items);
+	    $content = theme('openunion_navigation',$items);
+	    $blocks['subject'] = t('OpenUnion Navigation');
+	    $blocks['content'] = $content;
+	    return $blocks;
+	}
+	else{
+           $blocks['subject'] = t('OpenUnion Navigation');
+           $blocks['content'] = t('No content');
+           return $blocks;
+	}
+   }
+}
+
+/**
+* Callback to handle requests for philquotes content.
+* @return
+* JSON data.
+*/
+function openunion_navigation_item() {
+   //_POST
+   $item = _openunion_navigation_post();
+   drupal_json($item); 
+}
+
+function _openunion_navigation_post() {
+     $show_type = $_POST['show_type'];
+     $items = array();
+     if($show_type == 1){
+          $sql = "SELECT nid  FROM `content_type_group` WHERE `field_group_type_value` LIKE '社团'  ORDER BY `content_type_group`.`nid` DESC  LIMIT 0 , 55";
+     }
+     elseif($show_type == 2){
+          $sql = "SELECT nid  FROM `content_type_group` WHERE `field_group_type_value` LIKE '网站'  ORDER BY `content_type_group`.`nid` DESC  LIMIT 0 , 55";
+     }
+     elseif($show_type == 3){
+          $sql = "SELECT nid  FROM `content_type_group` WHERE `field_group_type_value` LIKE '人物'  ORDER BY `content_type_group`.`nid` DESC  LIMIT 0 , 55";
+     }
+     elseif($show_type == 4){
+          $sql = "SELECT nid  FROM `content_type_group` WHERE `field_group_type_value` LIKE '软件'  ORDER BY `content_type_group`.`nid` DESC  LIMIT 0 , 55";
+     }
+     else{
+	   return drupal_json("出错啦！！！");
+    }
+     $res = db_query($sql);
+     $i = 0 ;
+     while($row = db_fetch_object($res)){
+        $items['nid'][$i] = $row->nid;
+	$item_tmp = node_load($items['nid'][$i] );
+       	$items['title'][$i] =$item_tmp->title;
+	$items['url'][$i] = url("node/".$items['nid'][$i], array('absolute' => TRUE));
+	$i++;
+     }
+	$items['num']=$i;
+    
+    //$result = "<div class='type-title'><a class='author-title' href='".$items['url'][0]."'</a>".$items['title'][0]+"</div>";
+    return drupal_json($items);
+}
+
+/**
+* Implementaiton of hook_menu()
+*/
+function openunion_navigation_menu() {
+    $items['navigation.json'] = array(
+	'title' => 'Filter AJAX Gateway',
+	'page callback' => '_openunion_navigation_post',
+	'access arguments' => array('access content'),
+	'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+function _openunion_navigation_get(){
+          $sql = "SELECT nid  FROM `content_type_group` WHERE `field_group_type_value` LIKE '社团'  ORDER BY `content_type_group`.`nid` DESC  LIMIT 0 , 55";
+     $res = db_query($sql);
+     $group_count = array();
+     $i = 0 ;
+     while($row = db_fetch_object($res)){
+        $group_count['nid'][$i] = $row->nid;
+	$item_tmp = node_load($group_count['nid'][$i] );
+       	$group_count['title'][$i] =$item_tmp->title;
+	$group_count['url'][$i] = url("node/".$group_count['nid'][$i], array('absolute' => TRUE));
+	$i++;
+     }
+	$group_count['num']=$i;
+    return $group_count;
+}
+/*function  get_group_statistics($nid){
+    
+}*/
+
+function _openunion_navigation_filter(){
+    $radio = "<div id='navigation-title'><div class='hot-title'></div><div id='menu-2-1' class='menu-title'><li id='1-hot' class='first'><a>社团</a></li><li id='2-hot'><a>网站</a></li><li id='3-span'><a>人物</a></li><li id='4-hot'><a>软件</a></li></div></div>";
+    return $radio;
+}
+
+/**
+* Implementation of hook_theme().
+*/
+function openunion_navigation_theme(){
+    return array(
+	'openunion_navigation' => array(
+	    'arguments' => array('text' => NULL, 'origin' => NULL),
+        ),
+    );
+}
+
+function theme_openunion_navigation($items){
+ //   $field_label="社团类型";
+    $module_path = drupal_get_path('module', 'openunion_navigation');
+    $full_path = $module_path .'/openunion_navigation.css';
+    drupal_add_css($full_path);
+    drupal_add_js($module_path .'/openunion_navigation.js');
+    $opts = array('absolute' => TRUE);
+    $post_url = url('navigation.json', $opts);
+    drupal_add_js(
+	array('openunion_navigation' =>
+	    array("post_url"=>$post_url)), 
+	'setting'
+    );
+    $item = _openunion_navigation_filter();
+    for( $j = 0 ; $j < $items['num'] ; $j++ ){
+	$output = $output . '<li class="type-title" ><a class="author-title" href="'.$items['url'][$j].'">'.t(check_plain($items['title'][$j])).'</a></li>';
+	if(!(($j+1)%5)){
+		$output = $output . '<div class ="navigation-line"></div>';
+	}	
+    }
+    $output = '<div id="navigation-custom">'.$item.'<div id ="navigation-result"><div class="show-text"><ul class="ul-result">'.$output.'</ul></div></div><div class="navigation-result-bottom"></div></div></div>';
+    return $output;
+}
+
+

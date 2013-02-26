@@ -1,0 +1,6 @@
+; $Id$
+name = "ImageThumb"
+description = "缩编图片"
+core = 6.x
+php = 5.1
+package = Custom

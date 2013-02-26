@@ -1,0 +1,92 @@
+<?php
+/**
+* Implementation of hook_help()
+*/
+function openunion_images_help($path, $arg){
+    if ($path == 'admin/help#openunion_images') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+/**
+* Implementation of hook_block().
+*/
+function openunion_images_block($op = 'list', $delta = 0, $edit = array()){
+   switch ($op) {
+	case 'list':
+	   $blocks[0]['info'] = t('OpenUnion Images');
+	   return $blocks;
+	case 'view':
+	$items = _openunion_images_get();
+	//echo print_r($items);
+	if(!empty($items)){
+	    $content = theme('openunion_images',$items);
+	    $blocks['subject'] = t('OpenUnion Images');
+	    $blocks['content'] = $content;
+	    return $blocks;
+	}
+	else{
+           $blocks['subject'] = t('OpenUnion Images');
+           $blocks['content'] = t('No content');
+           return $blocks;
+	}
+   }
+}
+/**
+* Implementaiton of hook_menu()
+*/
+function openunion_images_menu() {
+    $items['showImages.json'] = array(
+	'title' => 'Filter AJAX Gateway',
+	'page callback' => '_openunion_images_post',
+	'access arguments' => array('access content'),
+	'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+function _openunion_images_get(){
+    $sql = "SELECT  nid , field_content_images_fid FROM `content_field_content_images` 
+	   ORDER BY `content_field_content_images`.`field_content_images_fid` DESC  LIMIT 0 , 7";
+    $res = db_query($sql);
+    $images_count = array();
+    $i= 0;
+    while($row = db_fetch_object($res)){
+        $images_count[$i]['nid'] = $row->nid;
+	$images_count[$i]['url'] = "?q=node/".$images_count[$i]['nid'];
+	$images_count[$i]['fid'] = $row->field_content_images_fid;
+	$images_res = db_query("SELECT filename,filepath FROM `files` 
+		WHERE `fid` = $row->field_content_images_fid");
+	$images_row = db_fetch_object($images_res);
+	$images_count[$i]['path'] = $images_row->filepath;
+	$i++;
+    }
+    return $images_count;
+}
+/**
+* Implementation of hook_theme().
+*/
+function openunion_images_theme(){
+    return array(
+	'openunion_images' => array(
+	    'arguments' => array('text' => NULL, 'origin' => NULL),
+        ),
+    );
+}
+function theme_openunion_images($items){
+    $module_path = drupal_get_path('module', 'openunion_images');
+    $full_path = $module_path .'/openunion_images.css';
+    drupal_add_css($full_path);
+    drupal_add_js($module_path .'/openunion_images.js');
+    $opts = array('absolute' => TRUE);
+
+    for( $j = 0 ; $j < count($items) ; $j++ ){
+	$div_id = 'img-'.$items[$j]['fid'];
+	$output = $output.'<li class="show_image"><div id="'.$div_id.'"class="img"><a href="'.$items[$j]['url'].'"><img src="'.$items[$j]['path'].'"></a></div></li>';
+    }
+	$output = '<div class="rollBox">
+          <div class ="rollBotton" id="LeftBotton"><img src="'.$module_path.'/images/pic_024.jpg" /></div>
+  	  <div id="scrollingImages"><ul id="Cont">'.$output.'</ul></div>
+          <div class="rollBotton" id="RightBotton"><img src="'.$module_path.'/images/pic_025.jpg" /></div></div>';
+    return $output;
+}

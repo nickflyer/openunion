@@ -1,0 +1,79 @@
+<?php
+/**
+ * @file
+ * Schema definition and installation functions.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function openlayers_styles_install() {
+  // Create tables
+  drupal_install_schema('openlayers_styles');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function openlayers_styles_uninstall() {
+  // Remove tables
+  drupal_uninstall_schema('openlayers_styles');
+}
+
+/**
+ * Implements hook_schema().
+ */
+function openlayers_styles_schema() {
+  $t = get_t();
+  $schema = array();
+
+  // Styles sources table (ctools extras)
+  $schema['openlayers_styles_sources'] = array(
+    'description' => $t('Storage for user defined OpenLayers styles sources.'),
+    'export' => array(
+      'key' => 'name',
+      'identifier' => 'openlayers_styles_sources',
+      'default hook' => 'openlayers_styles_sources',
+      'api' => array(
+        'owner' => 'openlayers_styles',
+        'api' => 'openlayers_styles_sources',
+        'minimum_version' => 1,
+        'current_version' => 1,
+      ),
+    ),
+    'fields' => array(
+      'name' => array(
+        'description' => $t('The primary identifier for the styles source.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'title' => array(
+        'description' => $t('The administrative title of the styles source.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'description' => array(
+        'description' => $t('The administrative description of the styles source.'),
+        'type' => 'text',
+        'not null' => TRUE,
+      ),
+      'provider' => array(
+        'description' => $t('The name of styles provider.'),
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ),
+      'options' => array(
+        'description' => $t('Serialized settings for the styles provider.'),
+        'type' => 'blob',
+        'not null' => FALSE,
+        'serialize' => TRUE,
+      ),
+    ),
+    'primary key' => array('name'),
+  );
+
+  return $schema;
+}

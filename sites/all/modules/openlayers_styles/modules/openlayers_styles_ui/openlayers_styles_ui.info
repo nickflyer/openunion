@@ -1,0 +1,14 @@
+name = OpenLayers Styles UI
+description = Provides administrative user interface for OpenLayers Styles. This module requires at least version 6.x-1.7 of CTools to run.
+core = 6.x
+dependencies[] = ctools
+dependencies[] = openlayers_styles
+dependencies[] = openlayers_ui
+package = OpenLayers
+
+; Information added by drupal.org packaging script on 2012-01-20
+version = "6.x-1.0-alpha1"
+core = "6.x"
+project = "openlayers_styles"
+datestamp = "1327072550"
+

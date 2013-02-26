@@ -1,0 +1,49 @@
+<?php
+function openunion_map_help($path, $arg){
+    if ($path == 'admin/help#openunion_map') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+/**
+* Implementation of hook_block().
+*/
+function openunion_map_block($op = 'list', $delta = 0, $edit = array()){
+   switch ($op) {
+	case 'list':
+	   $blocks[0]['info'] = t('OpenUnion Map');
+	   return $blocks;
+	case 'view':
+	    $content = theme('openunion_map');
+	    $blocks['subject'] = t('OpenUnion Map');
+	    $blocks['content'] = $content;
+	    return $blocks;
+   }
+}
+/**
+* Implementation of hook_theme().
+*/
+function openunion_map_theme(){
+    return array(
+	'openunion_map' => array(
+	    'arguments' => array('text' => NULL, 'origin' => NULL),
+        ),
+    );
+}
+
+function theme_openunion_map($items){
+ //   $field_label="社团类型";
+    $module_path = drupal_get_path('module', 'openunion_map');
+    $full_path = $module_path .'/openunion_map.css';
+    drupal_add_css($full_path);
+     //echo $module_path;
+    drupal_add_js($module_path .'/js/openunion_map.js');
+    drupal_add_js($module_path .'/js/chinamap.js');
+    drupal_add_js($module_path .'/js/raphael.js');
+  //  drupal_add_js($module_path .'/js/jquery.min.js');
+    $opts = array('absolute' => TRUE);
+
+    $output = '<div id="ChinaMap"><div id="ToolTip">地图正在绘制...</div></div>';
+    return $output;
+}

@@ -1,0 +1,44 @@
+#gmap-blocks-block-form .location-select .form-submit,
+#gmap-blocks-block-form .location-select .form-select,
+#gmap-blocks-block-form .location-select .form-item {
+  float: left;
+  margin: 0 5px 0 0;
+  padding: 0;
+}
+
+.gmap-blocks-directions-hidden {
+  visibility: hidden;
+}
+
+.gmap-blocks-directions-visible {
+  visibility: visible;
+}
+
+.gmap-blocks-directions-open-link {
+  position: absolute;
+}
+
+#gmap-blocks-directions-form, 
+#center #gmap-blocks-directions-form, 
+#gmap-blocks-directions-form .form-submit,
+#gmap-blocks-directions-form .form-item {
+  margin: 0 0 5px 0;
+  position: relative;
+}
+
+#gmap-blocks-directions-form .form-submit,
+#gmap-blocks-directions-form .form-item {
+  float: left;
+}
+
+#gmap-blocks-directions-form .form-text {
+  color: silver;
+}
+
+#gmap-blocks-directions-form .form-submit {
+  margin-left: 5px;
+}
+
+#gmap-blocks-directions-form {
+  min-width: 270px;
+} 

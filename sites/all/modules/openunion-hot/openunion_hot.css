@@ -1,0 +1,115 @@
+.front #block-openunion_hot-0{
+        width: 285px;
+}
+.front #block-openunion_hot-0 .inner{
+        width: 285px;
+}
+.front #block-openunion_hot-0 .inner .content{
+        width: 285px;
+}
+
+#volti-title .menu-title li{
+   color: #666666;
+   text-decoration: none;
+}
+#volti-title .menu-title li .tmpOver{
+   color: #780C2B;
+}
+
+#volti-title .menu-title li .tmpClick{
+   color: #780C2B;
+   text-decoration:underline
+}
+#volti-custom{
+    height: 127px;
+    margin: 11px 0 0 -10px;
+    width: 285px;
+}
+#volti-custom #volti-title{
+    background: url("images/sy-biaoti1-bj.gif") repeat-x scroll 0 0 transparent;
+    border: 1px solid #BFBFBF;
+    height: 22px;
+    margin: 0 auto;
+    position: relative;
+    width: 276px;
+}
+#volti-title .menu-title{
+    height: 30px;
+    position: absolute;
+    right: 0;
+    top: -5px;
+    width: 140px;
+}
+#volti-title .menu-title li{
+    background: url("images/hua2.gif") no-repeat scroll left -2px transparent;
+    float: left;
+    height: 30px;
+    line-height: 30px;
+    margin-right: -20px;
+    text-align: center;
+    width: 90px;
+}
+#volti-title .menu-title li.last{
+    background: url("images/hua2.gif") no-repeat scroll left -2px transparent;
+    margin-right: 0;
+    overflow: hidden;
+    padding-left: 15px;
+    width: 55px;
+}
+#volti-title .hot-title{
+    height: 32px;
+    left: 10px;
+    position: absolute;
+    top: -9px;
+    width: 83px;
+}
+#volti-result{
+    background: url("images/hot-bj1.gif") repeat-y scroll 0 0 transparent;
+    height: 95px;
+}
+#volti-result .show-text{
+    background: url("images/hot-topbj.gif") no-repeat scroll 0 0 transparent;
+    height: 90px;
+}
+#volti-result .show-text ul{
+    padding: 9px 0 0 15px;
+}
+#volti-result .type-title a{
+    color: #666666;
+    text-decoration: none;
+}
+#volti-result .type-title a:hover{
+   color:#5688A3;
+}
+#volti-result li {
+    height: 24px;
+    line-height: 24px;
+    padding-left: 20px;
+    position: relative;
+}
+#volti-result li .px{
+    background: url("images/px-biao.gif") no-repeat scroll 0 0 transparent;
+    color: #FFFFFF;
+    height: 13px;
+    left: 0;
+    line-height: 13px;
+    overflow: hidden;
+    position: absolute;
+    text-align: center;
+    top: 5px;
+    width: 13px;
+}
+#volti-result li .score{
+    height: 24px;
+    line-height: 24px;
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 50px;
+}
+#volti-result .volti-result-bottom{
+    background: url("images/hot-xiabj.gif") no-repeat scroll 0 0 transparent;
+    height: 5px;
+    overflow: hidden;
+}
+

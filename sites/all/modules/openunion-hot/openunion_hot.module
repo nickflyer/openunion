@@ -1,0 +1,213 @@
+<?php
+// $Id$
+/**
+* @file
+* Module for dynamic display of pithy philosophy quotes.
+*/
+/**
+* Implementation of hook_help()
+*/
+function openunion_hot_help($path, $arg){
+    if ($path == 'admin/help#openunion_hot') {
+	$txt = 'This module displays philosophical quotes in blocks. '.
+	   'It assumes the existence of a content type named "quote".';
+	return '<p>'. t($txt) .'</p>';
+    }
+}
+/**
+* Implementation of hook_block().
+*/
+function openunion_hot_block($op = 'list', $delta = 0, $edit = array()){
+   switch ($op) {
+	case 'list':
+	   $blocks[0]['info'] = t('OpenUnion Hot');
+	   return $blocks;
+	case 'view':
+	$items = _openunion_hot_get();
+	//echo print_r($items);
+	if(!empty($items)){
+	    $content = theme('openunion_hot',$items);
+	    $blocks['subject'] = t('OpenUnion Hot');
+	    $blocks['content'] = $content;
+	    return $blocks;
+	}
+	else{
+           $blocks['subject'] = t('OpenUnion Hot');
+           $blocks['content'] = t('No content');
+           return $blocks;
+	}
+   }
+}
+
+/**
+* Callback to handle requests for philquotes content.
+* @return
+* JSON data.
+*/
+function openunion_hot_item() {
+   //_POST
+   $item = _openunion_hot_post();
+   drupal_json($item); 
+}
+
+function _openunion_hot_post() {
+     $show_type = $_POST['show_type'];
+     $items = array();
+if($show_type == 1){
+     $sql = "SELECT nid , posts_count , members_count , comments_count  FROM `og_statistics`  ORDER BY `og_statistics`.`posts_count` DESC  LIMIT 0 , 20 ";
+     $res = db_query($sql);
+     $group_count = array();
+     $i = 0 ;
+     $group_max = array();
+     $group_max['score']['0'] = 0;
+     $group_max['score']['1'] = 0;
+     $group_max['score']['2'] = 0;
+     while($row = db_fetch_object($res)){
+        $group_count['nid'][$i] = $row->nid;
+	$group_count['score'][$i] = 6*$row->posts_count + 5*$row->members_count + 4*$row->comments_count  ;
+	if($group_count['score'][$i] > $group_max['score']['2'] ){
+		$group_max['score']['2'] = $group_count['score'][$i];
+		$group_max['nid']['2'] = $row->nid; 
+		if($group_count['score'][$i] > $group_max['score']['1']){
+			$group_max['score']['2'] =  $group_max['score']['1'];
+			$group_max['score']['1'] = $group_count['score'][$i];
+			$group_max['nid']['2'] = $group_max['nid']['1'];
+			$group_max['nid']['1'] = $group_count['nid'][$i] ;
+			if($group_count['score'][$i] > $group_max['score']['0']){
+				$group_max['score']['1'] =  $group_max['score']['0'];
+				$group_max['score']['0'] = $group_count['score'][$i];
+				$group_max['nid']['1'] = $group_max['nid']['0'];
+				$group_max['nid']['0'] = $group_count['nid'][$i] ;
+			}		 		
+		}
+	}
+	$i++;
+     }
+     for( $j=0 ; $j<3 ; $j++){
+	$item_tmp = node_load($group_max['nid'][$j]);
+	$items['nid'][$j] = $item_tmp->nid;
+       	$items['title'][$j] =$item_tmp->title;
+	$items['url'][$j] = url("node/".$items['nid'][$j], array('absolute' => TRUE));
+	$items['score'][$j] = $group_max['score'][$j];		
+     }
+     $items['num'] = $j;
+}
+     elseif($show_type == 2){
+	$sql = "SELECT uid , points   FROM `userpoints`  ORDER BY `userpoints`.`points` DESC LIMIT 0 , 3 ";
+	$res = db_query($sql);
+	$i = 0 ;
+	$user_max = array();
+	while($row = db_fetch_object($res)){
+		$items['uid'][$i] = $row->uid;
+	        $user_tmp = user_load($row->uid);
+		$items['score'][$i] = $row->points;
+		$items['title'][$i] = $user_tmp->name;
+	        $items['url'][$i] = url("user/".$items['uid'][$i], array('absolute' => TRUE));
+		$i++;
+	}
+     $items['num'] = $i;
+     }
+     else{
+	   return drupal_json("出错啦！！！");
+    }
+    
+    //$result = "<div class='type-title'><a class='author-title' href='".$items['url'][0]."'</a>".$items['title'][0]+"</div>";
+    return drupal_json($items);
+}
+
+/**
+* Implementaiton of hook_menu()
+*/
+function openunion_hot_menu() {
+    $items['volti.json'] = array(
+	'title' => 'Filter AJAX Gateway',
+	'page callback' => '_openunion_hot_post',
+	'access arguments' => array('access content'),
+	'type' => MENU_CALLBACK,
+    );
+    return $items;
+}
+
+function _openunion_hot_get(){
+     $sql = "SELECT nid , posts_count , members_count , comments_count  FROM `og_statistics`  ORDER BY `og_statistics`.`posts_count` DESC  LIMIT 0 , 20 ";
+     $res = db_query($sql);
+     $group_count = array();
+     $i = 0 ;
+     $group_max = array();
+     $group_max['score']['0'] = 0;
+     $group_max['score']['1'] = 0;
+     $group_max['score']['2'] = 0;
+     while($row = db_fetch_object($res)){
+        $group_count['nid'][$i] = $row->nid;
+	$group_count['score'][$i] = 6*$row->posts_count + 5*$row->members_count + 4*$row->comments_count  ;
+	if($group_count['score'][$i] > $group_max['score']['2'] ){
+		$group_max['score']['2'] = $group_count['score'][$i];
+		$group_max['nid']['2'] = $row->nid; 
+		if($group_count['score'][$i] > $group_max['score']['1']){
+			$group_max['score']['2'] =  $group_max['score']['1'];
+			$group_max['score']['1'] = $group_count['score'][$i];
+			$group_max['nid']['2'] = $group_max['nid']['1'];
+			$group_max['nid']['1'] = $group_count['nid'][$i] ;
+			if($group_count['score'][$i] > $group_max['score']['0']){
+				$group_max['score']['1'] =  $group_max['score']['0'];
+				$group_max['score']['0'] = $group_count['score'][$i];
+				$group_max['nid']['1'] = $group_max['nid']['0'];
+				$group_max['nid']['0'] = $group_count['nid'][$i] ;
+			}		 		
+		}
+	}
+	$i++;
+     }
+	$items = array();
+     for( $j=0 ; $j<3 ; $j++){
+	$item_tmp = node_load($group_max['nid'][$j]);
+	//echo print_r($item_tmp);
+	$items['nid'][$j] = $item_tmp->nid;
+	$items['type'][$j] = $item_tmp->type;
+       	$items['title'][$j] =$item_tmp->title;
+	$items['url'][$j] = url("node/".$items['nid'][$j], array('absolute' => TRUE));
+	$items['score'][$j] =$group_max['score'][$j];
+//	$items['title'][$i] = "[".$item_tmp->type."]" . $item_tmp->title;		
+     }
+    return $items;
+}
+
+function _openunion_hot_filter(){
+    $radio = "<div id='volti-title'><div class='hot-title'><img src='sites/all/modules/openunion-hot/images/hot.gif'></div><div id='menu-2-1' class='menu-title'><li id='1-hot'><span class='tmpClick'>群组</span></li><li id='2-hot' class='last'><span>用户</span></li></div></div>";
+    return $radio;
+}
+
+/**
+* Implementation of hook_theme().
+*/
+function openunion_hot_theme(){
+    return array(
+	'openunion_hot' => array(
+	    'arguments' => array('text' => NULL, 'origin' => NULL),
+        ),
+    );
+}
+
+function theme_openunion_hot($items){
+ //   $field_label="社团类型";
+    $module_path = drupal_get_path('module', 'openunion_hot');
+    $full_path = $module_path .'/openunion_hot.css';
+    drupal_add_css($full_path);
+    drupal_add_js($module_path .'/openunion_hot.js');
+    $opts = array('absolute' => TRUE);
+    $post_url = url('volti.json', $opts);
+    drupal_add_js(
+	array('openunion_hot' =>
+	    array("post_url"=>$post_url)), 
+	'setting'
+    );
+    $item = _openunion_hot_filter();
+    for( $j = 0 ; $j < 3 ; $j++ ){
+	$k = $j+1;
+	$output = $output . '<li class="type-title" ><div class="px">'.$k.'</div><a class="author-title" href="'.$items['url'][$j].'">'.t(check_plain($items['title'][$j])).'</a><span class="score">'.$items['score'][$j].'</span></li>';
+    }
+    $output = '<div id="volti-custom">'.$item.'<div id ="volti-result"><div class="show-text"><ul class="ul-result">'.$output.'</ul></div><div class="volti-result-bottom"></div></div></div></div>';
+    return $output;
+}
+
+

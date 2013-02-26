@@ -1,0 +1,587 @@
+<?php
+/**
+ * @file
+ * OpenLayers styles CCK field and widget implementations.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function openlayers_styles_cck_theme() {
+  return array(
+    'openlayers_styles_cck_value_widget' => array(
+      'arguments' => array('element' => NULL),
+    ),
+    'openlayers_styles_cck_formatter_title' => array(
+      'arguments' => array('element' => NULL),
+    ),
+  );
+}
+
+/**
+ * Implements hook_elements().
+ *
+ * Provides a select element for choosing styles.
+ */
+function openlayers_styles_cck_elements() {
+  return array(
+    'openlayers_styles_select' => array(
+      '#input' => TRUE,
+      '#multiple' => FALSE,
+      '#process' => array('openlayers_styles_cck_select_process'),
+      '#styles' => NULL,
+      '#group_source' => FALSE,
+      '#empty_option' => NULL,
+    ),
+    'openlayers_styles_cck_value_widget' => array(
+      '#input' => TRUE,
+      '#multiple' => FALSE,
+      '#delta' => 0,
+      '#process' => array('openlayers_styles_cck_value_widget_process'),
+      '#allowed_sources' => array(),
+      '#allowed_styles' => array(),
+      '#allowed_operator' => 'intersection',
+      '#group_source' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Processes a selector to display styles.
+ */
+function openlayers_styles_cck_select_process($element, $edit, &$form_state, $form) {
+  $field_name = $element['#field_name'];
+  $field = $form['#field_info'][$field_name];
+  $element['#type'] = 'select';
+
+  // Show all styles by default.
+  if (!isset($element['#styles'])) {
+    $element['#styles'] = openlayers_styles_cck_list_styles();
+  }
+
+  // Populate style options.
+  $options = array();
+  if (isset($element['#empty_option'])) {
+    $options[NULL] = $element['#empty_option'];
+  }
+  $source_options = array();
+  $all_styles = openlayers_styles();
+  $grouped = !empty($element['#group_source']);
+  foreach ($element['#styles'] as $style_name) {
+    // Add grouped style.
+    if ($grouped) {
+      @list($source_name, $raw_style_name) = explode(OPENLAYERS_STYLES_QUALIFIER_DELIMITER, $style_name);
+      if (isset($raw_style_name) && $source = openlayers_styles_source_load($source_name)) {
+        // Determine the source group to add to.
+        $raw_styles = openlayers_styles_get_raw_styles($source);
+        if (isset($raw_styles[$raw_style_name])) {
+          // Use unqualified title.
+          $source_options[$source_name][$style_name] = $raw_styles[$raw_style_name]->title;
+          continue;
+        }
+      }
+    }
+
+    // Add valid style to options by default.
+    if (isset($all_styles[$style_name])) {
+      $options[$style_name] = $all_styles[$style_name]->title;
+    }
+  }
+
+  // Expand source groups into options.
+  foreach ($source_options as $source_name => $options_group) {
+    $source = openlayers_styles_source_load($source_name);
+    $source_group_title = t('@source_title (@source_name)', array('@source_title' => $source->title, '@source_name' => $source_name));
+    $options[$source_group_title] = $options_group;
+  }
+
+  $element['#options'] = $options;
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_info().
+ */
+function openlayers_styles_cck_field_info() {
+  return array(
+    'openlayers_styles_style' => array(
+      'label' => t('OpenLayers style'),
+      'description' => t('Represent an OpenLayers style object by its name.'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_field_settings().
+ */
+function openlayers_styles_cck_field_settings($op, $field) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+
+      $form['allowed_values_fieldset'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Allowed values'),
+        '#collapsible' => TRUE,
+        '#collapsed' => !empty($field['allowed_sources']) && !empty($field['allowed_styles']),
+        '#description' => t('Specify criteria for styles allowed for selection.'),
+      );
+      $form['allowed_values_fieldset']['allowed_operator'] = array(
+        '#type' => 'radios',
+        '#title' => t('Operator'),
+        '#options' => array(
+          'intersection' => t('Intersection'),
+          'union' => t('Union'),
+        ),
+        '#default_value' => !empty($field['allowed_operator']) ? $field['allowed_operator'] : 'intersection',
+        '#description' => t('Choose the operator used to combine the following two criteria. If "Intersection" is used, only allowed by both criteria are shown. Otherwise, values allowed by either criterion are shown.'),
+        '#required' => TRUE,
+      );
+
+      // Provide choice of sources to filter styles for selection.
+      $options_sources = array('' => t('(All sources)'));
+      foreach (openlayers_styles_source_load_multiple() as $name => $source) {
+        $options_sources[$name] = $source->title;
+      }
+      if (empty($field['allowed_sources'])) {
+        $field['allowed_sources'] = array(NULL);
+      }
+      $form['allowed_values_fieldset']['allowed_sources'] = array(
+        '#type' => 'select',
+        '#title' => t('Allowed sources'),
+        '#multiple' => TRUE,
+        '#options' => $options_sources,
+        '#default_value' => $field['allowed_sources'],
+        '#description' => t('Select style sources to filter style by sources. If none is selected, all will be shown.'),
+        '#element_validate' => array('openlayers_styles_cck_validate_remove_empty_value'),
+      );
+
+      // Provide choice of styles to filter for selection.
+      $options_styles = array('' => t('(All styles)'));
+      foreach (openlayers_styles() as $name => $style) {
+        $options_styles[$name] = $style->title;
+      }
+      if (empty($field['allowed_styles'])) {
+        $field['allowed_styles'] = array(NULL);
+      }
+      $form['allowed_values_fieldset']['allowed_styles'] = array(
+        '#type' => 'openlayers_styles_select',
+        '#title' => t('Allowed styles'),
+        '#multiple' => TRUE,
+        '#group_source' => TRUE,
+        '#empty_option' => t('(All styles)'),
+        '#default_value' => $field['allowed_styles'],
+        '#description' => t('Select specific styles to filter by. If none is selected, all will be shown.'),
+        '#element_validate' => array('openlayers_styles_cck_validate_remove_empty_value'),
+      );
+
+      return $form;
+
+    case 'save':
+      return array('allowed_sources', 'allowed_styles', 'allowed_operator');
+
+    case 'database columns':
+      return array(
+        'value' => array('type' => 'varchar', 'length' => 255, 'not null' => FALSE, 'views' => TRUE),
+      );
+  }
+}
+
+/**
+ * Validates allowed value selection box by removing empty values.
+ */
+function openlayers_styles_cck_validate_remove_empty_value($element, &$form_state) {
+  if (!empty($element['#value'])) {
+    $value = array_filter($element['#value']);
+    form_set_value($element, $value, $form_state);
+  }
+}
+
+/**
+ * Implements hook_field().
+ */
+function openlayers_styles_cck_field($op, &$node, $field, &$items, $teaser, $page) {
+  switch ($op) {
+    case 'validate':
+      if (is_array($items)) {
+        $allowed_values = openlayers_styles_cck_list_styles($field['allowed_sources'], $field['allowed_styles'], $field['allowed_operator']);
+        foreach ($items as $delta => $item) {
+          $error_element = isset($item['_error_element']) ? $item['_error_element'] : '';
+          if (is_array($item) && isset($item['_error_element'])) unset($item['_error_element']);
+          if (!empty($item['value'])) {
+            if (!in_array($item['value'], $allowed_values)) {
+              form_set_error($error_element, t('%name: illegal value.', array('%name' => t($field['widget']['label']))));
+            }
+          }
+        }
+      }
+      return $items;
+  }
+}
+
+/**
+ * Implements hook_content_is_empty().
+ */
+function openlayers_styles_cck_content_is_empty($item, $field) {
+  return empty($item['value']);
+}
+
+/**
+ * Populates a list of style names given styles and source to include.
+ */
+function openlayers_styles_cck_list_styles($sources = array(), $styles = array(), $operator = 'intersection') {
+  // List all styles.
+  if ($operator == 'intersection' && empty($sources) && empty($styles) || $operator == 'union' && (empty($sources) || empty($styles))) {
+    $all_styles = openlayers_styles();
+    return array_keys($all_styles);
+  }
+  // List by criteria.
+  else {
+    $styles = array_combine($styles, $styles);
+    $list = array();
+
+    // Add source styles.
+    foreach ($sources as $source_name) {
+      $source = openlayers_styles_source_load($source_name);
+      foreach (openlayers_styles_get_source_styles($source) as $style_name => $style) {
+        // Add style if using union or common style if using intersection.
+        if ($operator == 'union' || $operator == 'intersection' && (empty($styles) || isset($styles[$style_name]))) {
+          $list[$style_name] = $style_name;
+        }
+        // Remove duplicates from styles.
+        if (isset($styles[$style_name])) {
+          unset($styles[$style_name]);
+        }
+      }
+    }
+
+    // Add given styles only if using union. Values remaining in $styles at
+    // this point would not intersect with source styles.
+    if ($operator == 'union') {
+      foreach ($styles as $style_name) {
+        $list[$style_name] = $style_name;
+      }
+    }
+
+    return array_values($list);
+  }
+}
+
+/**
+ * Implements hook_field_formatter_info().
+ */
+function openlayers_styles_cck_field_formatter_info() {
+  return array(
+    'title' => array(
+      'label' => t('Default title'),
+      'field types' => array('openlayers_styles_style'),
+      'description' => t('Displays the default descriptive title of the OpenLayers style.'),
+      'multiple values' => CONTENT_HANDLE_CORE,
+    ),
+  );
+}
+
+/**
+ * Renders the title of a style field.
+ */
+function theme_openlayers_styles_cck_formatter_title($element) {
+  $name = $element['#item']['value'];
+  $styles = openlayers_styles();
+  if (!empty($name) && isset($styles[$name])) {
+    $style = $styles[$name];
+    return $style->title;
+  }
+
+  return '';
+}
+
+/**
+ * Implements hook_widget_info().
+ */
+function openlayers_styles_cck_widget_info() {
+  return array(
+    'openlayers_styles_select' => array(
+      'label' => t('Select list'),
+      'field types' => array('openlayers_styles_style'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+    'openlayers_styles_options' => array(
+      'label' => t('Check boxes/radio buttons'),
+      'field types' => array('openlayers_styles_style'),
+      'multiple values' => CONTENT_HANDLE_MODULE,
+      'callbacks' => array(
+        'default value' => CONTENT_CALLBACK_DEFAULT,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_widget_settings().
+ */
+function openlayers_styles_cck_widget_settings($op, $widget) {
+  $widget_type = isset($widget['widget_type']) ? $widget['widget_type'] : $widget['type'];
+  $function = $widget_type . '_widget_settings';
+  if (function_exists($function)) {
+    return $function($op, $widget);
+  }
+}
+
+/**
+ * Constructs the widget settings form for openlayers_styles_select.
+ */
+function openlayers_styles_select_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+      $form['group_source'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Group by style source'),
+        '#default_value' => !empty($widget['group_source']),
+        '#description' => t('Select this to group styles to be listed under source titles as option groups (OptGroup).'),
+      );
+      return $form;
+
+    case 'save':
+      return array('group_source');
+  }
+}
+
+/**
+ * Constructs the widget settings form for openlayers_styles_options.
+ */
+function openlayers_styles_options_widget_settings($op, $widget) {
+  switch ($op) {
+    case 'form':
+      $form = array();
+
+      $form['advanced_label'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('Advanced option labels'),
+        '#description' => t('Customize the label for each displayed option. When advanced option labels are not in use, the label for each option is only the style title.'),
+        '#collapsible' => TRUE,
+        '#collapsed' => empty($widget['advanced_label']),
+      );
+      $form['advanced_label']['advanced_label'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Customize option label'),
+        '#default_value' => $widget['advanced_label'],
+        '#description' => t('Select to use the advanced label pattern.'),
+      );
+
+      $description = '<p>' . t('Specify the pattern for displaying the label for a style option. You may use the following variables in the pattern:') . '</p>';
+      $description .= '<ul>';
+      $description .= '<li>${name} : ' . t('Unique name.') . '</li>';
+      $description .= '<li>${raw_name} : ' . t('Unqualified name if the style came from a source; otherwise, the default unique name is used.') . '</li>';
+      $description .= '<li>${title} : ' . t('Descriptive title.') . '</li>';
+      $description .= '<li>${raw_title} : ' . t('Unqualified title if the style came from a source; otherwise, the default descriptive title is used.') . '</li>';
+      $description .= '<li>${description} : ' . t('Detailed description of the style.') . '</li>';
+      $description .= '<li>${<em>propertyName</em>} : ' . t('The name of any style property.') . '</li>';
+      $description .= '</ul>';
+      $form['advanced_label']['advanced_label_pattern'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Label pattern'),
+        '#default_value' => $widget['advanced_label_pattern'],
+        '#description' => $description,
+      );
+
+      return $form;
+
+    case 'save':
+      return array('advanced_label', 'advanced_label_pattern');
+  }
+}
+
+/**
+ * Implements hook_widget().
+ */
+function openlayers_styles_cck_widget(&$form, &$form_state, $field, $items, $delta = NULL) {
+  $element = array(
+    '#type' => 'openlayers_styles_cck_value_widget',
+    '#multiple' => !empty($field['multiple']),
+    '#group_source' => !empty($field['group_source']),
+    '#allowed_sources' => array_filter((array) $field['allowed_sources']),
+    '#allowed_styles' => array_filter((array) $field['allowed_styles']),
+    '#allowed_operator' => !empty($field['allowed_operator']) ? $field['allowed_operator'] : 'intersection',
+    '#default_value' => !empty($items) ? $items : array(),
+  );
+  return $element;
+}
+
+/**
+ * Processes the intermediary element between CCK and style selector.
+ */
+function openlayers_styles_cck_value_widget_process($element, $edit, &$form_state, $form) {
+  $field_name = $element['#field_name'];
+  $field = $form['#field_info'][$field_name];
+
+  // Process element value.
+  $items = !empty($element['#default_value']) ? $element['#default_value'] : array();
+  $element['#value'] = $items;
+
+  $function = $field['widget']['type'] . '_value_widget';
+  if (function_exists($function)) {
+    $element['value'] = $function($element, $edit, $form_state, $form, $field);
+
+    // Set selector to element value.
+    if (!empty($element['#multiple'])) {
+      $element['value']['#default_value'] = array();
+      foreach ($items as $item) {
+        if (!empty($item['value'])) {
+          $element['value']['#default_value'][] = $item['value'];
+        }
+      }
+    }
+    elseif (!empty($items)) {
+      $element['value']['#default_value'] = $items[0]['value'];
+    }
+  }
+
+  // Add element validator.
+  if (empty($element['#element_validate'])) {
+    $element['#element_validate'] = array();
+  }
+  array_unshift($element['#element_validate'], 'openlayers_styles_cck_value_widget_validate');
+
+  // Push field info for later use.
+  $form_state['#field_info'][$field['field_name']] = $field;
+  return $element;
+}
+
+/**
+ * Renders the child value widget elements.
+ */
+function theme_openlayers_styles_cck_value_widget($element) {
+  return $element['#children'];
+}
+
+/**
+ * Constructs the value widget for openlayers_styles_select.
+ */
+function openlayers_styles_select_value_widget($element, $edit, &$form_state, $form, $field) {
+  $element['value'] = array(
+    '#type' => 'openlayers_styles_select',
+    '#title' => $element['#title'],
+    '#description' => $element['#description'],
+    '#group_source' => !empty($element['#group_source']),
+    '#required' => isset($element['#required']) ? $element['#required'] : $field['required'],
+    '#multiple' => isset($element['#multiple']) ? $element['#multiple'] : $field['multiple'],
+    '#styles' => openlayers_styles_cck_list_styles($element['#allowed_sources'], $element['#allowed_styles'], $element['#allowed_operator']),
+    '#empty_option' => t('- None -'),
+  );
+  return $element['value'];
+}
+
+/**
+ * Constructs the value widget for openlayers_styles_options.
+ */
+function openlayers_styles_options_value_widget($element, $edit, &$form_state, $form, $field) {
+  $element['value'] = array(
+    '#type' => !empty($field['multiple']) ? 'checkboxes' : 'radios',
+    '#title' => $element['#title'],
+    '#description' => $element['#description'],
+    '#required' => isset($element['#required']) ? $element['#required'] : $field['required'],
+    '#multiple' => isset($element['#multiple']) ? $element['#multiple'] : $field['multiple'],
+  );
+
+  // Prepare pattern options.
+  $pattern = NULL;
+  $load_source = FALSE;
+  if (!empty($field['widget']['advanced_label'])) {
+    $pattern = isset($field['widget']['advanced_label_pattern']) ? $field['widget']['advanced_label_pattern'] : '';
+    $load_source = !empty($pattern) && preg_match('/\$\{raw_(name|title)\}/', $pattern);
+  }
+
+  // Populate style options.
+  $options = array();
+  if (empty($element['value']['#multiple']) && empty($element['value']['#required'])) {
+    $options[NULL] = t('None');
+  }
+  $styles = openlayers_styles_cck_list_styles($element['#allowed_sources'], $element['#allowed_styles'], $element['#allowed_operator']);
+  $all_styles = openlayers_styles();
+  foreach ($styles as $style_name) {
+    if (isset($all_styles[$style_name])) {
+      $style = $all_styles[$style_name];
+      if ($load_source) {
+        // Use fully loaded style from source.
+        @list($source_name, $raw_style_name) = explode(OPENLAYERS_STYLES_QUALIFIER_DELIMITER, $style_name);
+        if (isset($raw_style_name) && $source = openlayers_styles_source_load($source_name)) {
+          // Determine the source group to add to.
+          $source_styles = openlayers_styles_get_source_styles($source);
+          if (isset($source_styles[$style_name])) {
+            $style = $source_styles[$style_name];
+          }
+        }
+      }
+
+      // Use default title.
+      if (!isset($pattern)) {
+        $options[$style_name] = $style->title;
+      }
+      // Use pattern.
+      else {
+        // Replace variables.
+        _openlayers_styles_options_value_pattern_callback(NULL, $style);
+        $label = preg_replace_callback('/\$\{([^}]*)\}/', '_openlayers_styles_options_value_pattern_callback', $pattern);
+        $options[$style_name] = $label;
+      }
+    }
+  }
+
+  $element['value']['#options'] = $options;
+  return $element['value'];
+}
+
+/**
+ * Regular expression replace callback for custom option label patterns.
+ */
+function _openlayers_styles_options_value_pattern_callback($match, $init_style = NULL) {
+  static $style = NULL;
+  if (isset($init_style)) {
+    $style = $init_style;
+    return;
+  }
+
+  // Define source-related raw variable fallbacks.
+  static $fallback = array(
+    'raw_name' => 'name',
+    'raw_title' => 'title',
+  );
+
+  $name = $match[1];
+
+  // Replace basic variables.
+  if (isset($style->$name) || isset($fallback[$name])) {
+    // Fallback.
+    if (!isset($style->$name)) {
+      $name = $fallback[$name];
+    }
+    return $style->$name;
+  }
+  elseif (isset($style->data) && is_array($style->data) && isset($style->data[$name])) {
+    return $style->data[$name];
+  }
+}
+
+/**
+ * Validates value widget form submission.
+ */
+function openlayers_styles_cck_value_widget_validate($element, &$form_state) {
+  $field = $form_state['#field_info'][$element['#field_name']];
+
+  // Use value from widget.
+  $items = array();
+  foreach (array_filter((array) $element['value']['#value']) as $value) {
+    $items[] = array('value' => $value);
+  }
+  form_set_value($element, $items, $form_state);
+
+  // Validate number of values.
+  if ($field['multiple'] >= 2 && count($items) > $field['multiple']) {
+    form_error($element['value'], t('%name: this field cannot hold more than @count values.', array('%name' => t($field['widget']['label']), '@count' => $field['multiple'])));
+  }
+}

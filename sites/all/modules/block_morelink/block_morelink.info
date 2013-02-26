@@ -1,0 +1,13 @@
+; $Id$
+name = Block More Link
+description = Provide a more link for all blocks.
+package = Other
+core = 6.x
+
+
+; Information added by drupal.org packaging script on 2011-07-10
+version = "6.x-1.0-beta1"
+core = "6.x"
+project = "block_morelink"
+datestamp = "1310266014"
+

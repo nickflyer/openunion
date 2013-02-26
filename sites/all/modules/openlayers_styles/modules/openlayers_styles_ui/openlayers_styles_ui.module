@@ -1,0 +1,14 @@
+<?php
+/**
+ * @file
+ * Administrative user interface for OpenLayers Styles.
+ */
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function openlayers_styles_ui_ctools_plugin_directory($owner, $plugin_type) {
+  if ($owner == 'ctools' && $plugin_type == 'export_ui') {
+    return 'export_ui';
+  }
+}

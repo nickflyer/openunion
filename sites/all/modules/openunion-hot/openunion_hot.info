@@ -1,0 +1,6 @@
+; $Id$
+name = "OpenUnion Hot"
+description = "Hot Menu of Group and User in the frontpage."
+core = 6.x
+php = 5.1
+package = Custom

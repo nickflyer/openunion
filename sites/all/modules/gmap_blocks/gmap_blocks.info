@@ -1,0 +1,11 @@
+; $Id: gmap_blocks.info,v 1.2 2009/09/15 05:23:39 skilip Exp $
+name = GMap Blocks
+description = Create Google Maps blocks for your website
+core = 6.x
+
+; Information added by drupal.org packaging script on 2010-05-01
+version = "6.x-1.0"
+core = "6.x"
+project = "gmap_blocks"
+datestamp = "1272716408"
+

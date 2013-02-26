@@ -1,0 +1,37 @@
+<?php
+/**
+ * @file
+ * Field installation helpers.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function openlayers_styles_cck_install() {
+  drupal_load('module', 'content');
+  content_notify('install', 'openlayers_styles_cck');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function openlayers_styles_cck_uninstall() {
+  drupal_load('module', 'content');
+  content_notify('uninstall', 'openlayers_styles_cck');
+}
+
+/**
+ * Implements hook_enable().
+ */
+function openlayers_styles_cck_enable() {
+  drupal_load('module', 'content');
+  content_notify('enable', 'openlayers_styles_cck');
+}
+
+/**
+ * Implements hook_disable().
+ */
+function openlayers_styles_cck_disable() {
+  drupal_load('module', 'content');
+  content_notify('disable', 'openlayers_styles_cck');
+}

@@ -1,0 +1,12 @@
+name = Shoutbox user
+core = 6.x
+description = Shoutbox's per user, similar to a facebook wall
+package = Shoutbox
+dependencies[] = shoutbox
+
+; Information added by drupal.org packaging script on 2012-02-17
+version = "6.x-2.8"
+core = "6.x"
+project = "shoutbox"
+datestamp = "1329492339"
+

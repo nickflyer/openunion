@@ -1,0 +1,143 @@
+<?php
+// $Id$
+
+/**
+ * Implements hook_form_FORMID_alter().
+ *
+ * Adds more link path textfield to add block form.
+ */
+function block_morelink_form_block_add_block_form_alter(&$form, &$form_state) {
+  block_morelink_form_block_admin_configure_alter($form, $form_state);
+}
+function block_morelink_form_block_admin_configure_alter(&$form, &$form_state){
+  $sql = "SELECT url, title FROM {block_morelink} WHERE module = '%s'AND delta = '%s'";
+  $result = db_query(db_rewrite_sql($sql),$form['module']['#value'],$form['delta']['#value']);
+  $data = db_fetch_object($result);
+  if(!empty($data)){
+    $default_block_morelink_url = $data->url;
+    $default_block_morelink_title = $data->title;
+  }
+  $form['block_settings']['morelink'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('More link settings'),
+    '#collapsible' => FALSE,
+    //'#description' => t('Specify more link url and title.'),
+		'#weight' => -1,
+  );
+  $form['block_settings']['morelink']['block_morelink_url'] = array(
+    '#type' => 'textfield',
+    '#title' => t('More Link url'),
+    '#maxlength' => 255,
+    '#description' => t('The More Link url of the block as shown to the user.') ,
+    '#default_value' =>  $default_block_morelink_url,
+    '#weight' => 0,
+  );
+  $form['block_settings']['morelink']['block_morelink_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('More Link title'),
+    '#maxlength' => 255,
+    '#description' => t('The More Link title of the block as shown to the user.') ,
+    '#default_value' =>  $default_block_morelink_title,
+    '#weight' => 1,
+  );
+  $form['#submit'][] = 'block_morelink_block_admin_configure_submit';
+}
+
+/**
+ * Form submit handler for block configuration form.
+ */
+function block_morelink_block_admin_configure_submit($form, &$form_state){
+  if($form_state['values']['module']=='block' &&  empty ($form_state['values']['delta'])){
+    $form_state['values']['delta'] = db_result(db_query("SELECT bid FROM {boxes} WHERE info = '%s'", $form_state['values']['info']));
+  }
+  
+  db_query("DELETE FROM {block_morelink} WHERE module = '%s'AND delta = '%s'", $form_state['values']['module'],$form_state['values']['delta']);
+
+  if(!empty($form_state['values']['block_morelink_url'])){	  
+    db_query("INSERT INTO {block_morelink} (module, delta, url, title) VALUES ('%s', '%s', '%s', '%s')",
+      $form_state['values']['module'],
+      $form_state['values']['delta'],
+      $form_state['values']['block_morelink_url'],
+      $form_state['values']['block_morelink_title']
+    );
+  }
+  
+}
+
+/**
+ * Process variables for block.tpl.php
+ *
+ * The $variables array contains the following arguments:
+ * - $block
+ *
+ * @see block.tpl.php
+ */
+function block_morelink_preprocess_block(&$variables) {
+
+  $sql = "SELECT url, title FROM {block_morelink} WHERE module = '%s'AND delta = '%s'";
+  $result = db_query(db_rewrite_sql($sql),$variables['block']->module,$variables['block']->delta);
+  $data = db_fetch_object($result);
+  $block_morelink_url = empty($data)?'':$data->url;
+  $block_morelink_title = empty($data)?'':$data->title;
+  $variables['block']->more = theme('block_morelink_link',array('url'=>$block_morelink_url,'title'=>$block_morelink_title));
+}
+
+/**
+ * Implements hook_menu().
+ */
+function block_morelink_menu() {
+
+  $items['admin/settings/block_morelink'] = array(
+    'title' => 'Block More Link settings',
+    'description' => 'Change the lable of the block more link.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('block_morelink_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'weight' => -10,
+   // 'file' => 'system.admin.inc',
+  );
+   return $items;
+}
+function block_morelink_admin_settings(){
+  $form['block_morelink_label'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Block More Link lable'),
+    '#maxlength' => 40,
+    '#description' => t('The Block More Link lable as shown to the user.') ,
+    '#default_value' =>  variable_get('block_morelink_label', 'more'),
+    '#weight' => -17,
+  );
+  
+  return system_settings_form($form, TRUE);
+}
+function block_morelink_theme(){
+  return array(
+    'block_morelink_link' => array(
+       'variables' => array('url' => NULL,'title' => NULL,)
+    ),
+    
+  );
+}
+
+/**
+ * Returns HTML for a "more" link, like those used in blocks.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - url: The url of the main page.
+ *   - title: A descriptive verb for the link, like 'Read more'.
+ */
+function theme_block_morelink_link($variables) {
+  $output = "";
+  if(!empty($variables['url'])){
+		if (!empty($variables['title'])) {
+      $block_morelink_label = $variables['title'];
+    }
+    else {
+		  $block_morelink_label = variable_get('block_morelink_label', 'more');
+    }
+    $output .= '<span class="block-morelink-link">' . l($block_morelink_label,$variables['url'],array('attributes'=>array('title'=>$variables['title']))). '</span>';
+  //$output .= '<span class="block-more-link">' . t('<a href="@link" title="@title">More</a>', array('@link' => check_url($variables['url']), '@title' => $variables['title'])) . '</div>';
+  }
+  return $output;
+}
