@@ -52,6 +52,7 @@ git push origin master <br />
 第六：切换到其他的branch<br />
 <br />如果还没有其他分支:<br />git checkout -b yangll<br />git push -u origin yangll<br />
 <br />
+已经有分支，从切换到其他分支到提交分支:<br />
 git checkout  yangll<br />
 git pull<br />
 各种操作<br />
