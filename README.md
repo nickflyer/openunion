@@ -2,12 +2,11 @@
 
 github使用指南
 =========
-openunion
 
 下面是github的相关信息：<br />
 http://www.worldhello.net/gotgithub/02-join-github/010-account-setup.html<br />
 
-下面是提炼出的简明攻略：<br />
+以下是提炼出的本地git和github配合使用的简明攻略：<br />
 第一：认证<br />
 ssh -T git@github.com 认证<br />
 如果被拒绝，说明没有把本机的git和github链接在一起，需要设置公钥或者私钥。<br />
@@ -23,11 +22,11 @@ ssh -T git@github.com 认证<br />
 (4)将~/.ssh/yourname.pub文件内容拷贝到github账户中的SSH公钥管理的对话框中。
 <br />
 
-第二：clone已有的版本（本地没有文件，从github上获得新的文件）<br />
+第二：本地clone在github上已有的项目版本（本地没有文件，从github上获得新的文件）<br />
 git clone git@github.com:COPU/openunion.git<br />
-cd gotgit<br />
+cd openunion<br />
 <br />
-如果本地最初有文件，则如下所示：<br />
+如果本地最初有文件，要上传，则如下所示：<br />
 cd ?<br />
 git init<br />
 git add .<br />
